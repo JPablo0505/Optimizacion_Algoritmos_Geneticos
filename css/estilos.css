@@ -1,0 +1,347 @@
+/* =========================================================
+   Algoritmos Genéticos — presentación interactiva
+   Hoja de estilos única (todo el look & feel vive acá)
+   ========================================================= */
+
+:root{
+  /* paleta institucional UdeA (Manual de Identidad Institucional) */
+  --bg:#0a1410;
+  --panel:#0f2019;
+  --panel2:#12291f;
+  --line:#1f3a2e;
+  --txt:#eef5f1;
+  --muted:#a3bcae;
+  --acc:#43b649;
+  --acc2:#3ebdac;
+  --warn:#f9a12c;
+  --pink:#ef434d;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+
+html,body{height:100%}
+body{
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  font-size:17px;
+  color:var(--txt);
+  overflow:hidden;
+  background:
+    radial-gradient(1100px 700px at 12% -10%,#123527 0%,rgba(18,53,39,0) 55%),
+    radial-gradient(900px 600px at 110% 110%,#0e2f33 0%,rgba(14,47,51,0) 55%),
+    var(--bg);
+}
+
+/* ---------- barra de progreso ---------- */
+#progress{
+  position:fixed;top:0;left:0;height:5px;width:0;z-index:60;
+  background:linear-gradient(90deg,var(--acc),var(--acc2));
+  transition:width .35s ease;
+}
+
+/* ---------- deck y diapositivas ---------- */
+#deck{position:relative;height:100vh;height:100dvh}
+
+.slide{
+  position:absolute;inset:0;
+  padding:4.5vh 5vw 70px;
+  overflow-y:auto;overflow-x:hidden;
+  opacity:0;visibility:hidden;
+  transform:translateY(14px);
+  transition:opacity .35s ease,transform .35s ease,visibility 0s linear .35s;
+  display:flex;flex-direction:column;justify-content:flex-start;
+  gap:1.8vh;
+}
+/* centrado sin recorte: si el contenido desborda, los pseudo-elementos
+   colapsan a cero y el scroll llega hasta el tope */
+.slide::before,.slide::after{content:"";flex:0 0 auto;margin:auto 0}
+.slide.active{
+  opacity:1;visibility:visible;transform:none;
+  transition:opacity .35s ease,transform .35s ease,visibility 0s linear 0s;
+}
+/* un transition:all en un descendiente animaría la visibility heredada
+   y dejaría fantasmas al navegar: en slides inactivos nada transiciona */
+.slide:not(.active) *{transition:none!important}
+
+.slide::-webkit-scrollbar{width:9px}
+.slide::-webkit-scrollbar-thumb{background:#1e3a2f;border-radius:5px}
+
+/* ---------- tipografía ---------- */
+h1{
+  font-size:clamp(2.6rem,7vw,5.6rem);
+  line-height:1.02;letter-spacing:-.02em;
+  background:linear-gradient(92deg,#fff 10%,var(--acc2) 55%,var(--acc) 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+h2{
+  font-size:clamp(1.7rem,3.6vw,2.9rem);
+  letter-spacing:-.01em;
+  display:flex;align-items:center;gap:.7rem;flex-wrap:wrap;
+}
+h2 .n{font-size:.5em;color:var(--acc);letter-spacing:.1em}
+h3{font-size:1.12rem;color:#fff;margin-bottom:.35rem}
+
+.lead{
+  font-size:clamp(1.05rem,1.7vw,1.4rem);
+  color:var(--muted);max-width:66ch;line-height:1.6;
+}
+p,li{color:var(--muted);line-height:1.65}
+strong,b{color:#fff}
+ul,ol{padding-left:1.3rem;display:grid;gap:.45rem}
+li::marker{color:var(--acc2)}
+.small{font-size:.88rem}
+.center{text-align:center}
+
+.kicker{
+  display:inline-flex;align-items:center;gap:.6rem;
+  font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--acc2);font-weight:700;
+}
+.kicker::before{content:"";width:30px;height:2px;background:var(--acc2)}
+
+/* ---------- tarjetas y rejillas ---------- */
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.grid.wide{grid-template-columns:repeat(auto-fit,minmax(330px,1fr))}
+
+.card{
+  background:linear-gradient(180deg,var(--panel),var(--panel2));
+  border:1px solid var(--line);border-radius:16px;
+  padding:18px 18px 17px;position:relative;overflow:hidden;
+}
+.card::before{
+  content:"";position:absolute;inset:0 auto auto 0;height:3px;width:100%;
+  background:linear-gradient(90deg,var(--acc),transparent);
+}
+.card.g::before{background:linear-gradient(90deg,var(--acc2),transparent)}
+.card.o::before{background:linear-gradient(90deg,var(--warn),transparent)}
+.card p,.card li{font-size:.97rem}
+.card h3{font-size:1.1rem}
+
+.tag{
+  display:inline-block;font-size:.74rem;font-weight:700;letter-spacing:.08em;
+  padding:4px 10px;border-radius:999px;border:1px solid var(--line);
+  color:var(--acc2);background:#0c1a15;margin-bottom:.6rem;
+}
+
+/* ---------- cajas destacadas ---------- */
+.warn\boxed{border-left:4px solid var(--warn);background:#1a1710;border-radius:0 12px 12px 0;padding:13px 17px}
+.warnbox p{color:#eddfc4;font-size:1.05rem}
+.ok\boxed{border-left:4px solid var(--acc2);background:#0e1a1a;border-radius:0 12px 12px 0;padding:13px 17px}
+.okbox p{color:#d8f7ee;font-size:1.08rem}
+.hl{color:var(--acc2);font-weight:700}
+
+/* ---------- tablas ---------- */
+table{border-collapse:collapse;width:100%;font-size:1rem}
+th,td{padding:.62rem .8rem;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--acc2);font-size:.78rem;text-transform:uppercase;letter-spacing:.1em}
+td{color:var(--muted)}
+td:first-child{color:#fff;font-weight:600}
+tr:hover td{background:#12251d}
+
+/* ---------- flujo de pasos ---------- */
+.flow{display:flex;flex-wrap:wrap;gap:9px;align-items:center}
+.flow .step{
+  background:var(--panel);border:1px solid var(--line);border-radius:12px;
+  padding:12px 16px;font-size:.98rem;color:#e2ebe4;min-width:150px;text-align:center;
+}
+.flow .step b{display:block;color:var(--acc2);font-size:.78rem;letter-spacing:.08em;margin-bottom:3px}
+.flow .arrow{color:var(--acc);font-weight:700;font-size:1.2rem}
+.loop{color:var(--warn);font-size:.95rem;font-weight:700;letter-spacing:.04em}
+
+/* ---------- mini diagramas (cruce y mutación) ---------- */
+.mini{display:grid;gap:6px;margin-top:10px}
+.mini .lab{font-size:.74rem;color:var(--acc2);letter-spacing:.1em;text-transform:uppercase}
+.cells{display:flex;gap:4px;flex-wrap:wrap}
+.cell{
+  width:26px;height:26px;border-radius:6px;display:grid;place-items:center;
+  font-size:.72rem;font-weight:700;
+}
+.cell.pa{background:var(--acc);color:#fff}
+.cell.pb{background:var(--acc2);color:#0a1410}
+.cell.same{background:#37514a;color:#a9bfb6}
+.cell.mut{background:var(--pink);color:#fff;animation:blink 1s steps(2) infinite}
+@keyframes blink{50%{opacity:.5}}
+
+/* ---------- código ---------- */
+.code{
+  background:#0b1712;border:1px solid var(--line);border-radius:14px;
+  padding:16px 18px;overflow:auto;
+  font-family:Consolas,"Cascadia Code",monospace;
+  font-size:.86rem;line-height:1.6;color:#cfe0d6;
+}
+pre.code{white-space:pre}
+.code .k{color:#43b649}.code .s{color:#f9a12c}
+.code .c{color:#6f8a7e;font-style:italic}.code .f{color:#3ebdac}.code .o{color:#8dc63f}
+
+/* ---------- enlaces a implementaciones ---------- */
+.repolist{display:grid;gap:10px;grid-template-columns:1fr}
+.repolist a{
+  display:block;border:1px solid var(--line);border-radius:12px;
+  padding:11px 14px;background:#0d1c17;border-bottom:1px solid var(--line);
+  font-size:.92rem;transition:background .15s,border-color .15s,transform .15s;
+}
+.repolist a:hover{border-color:var(--acc);background:#122a20;transform:translateY(-2px)}
+.repolist a b{color:#fff;display:block;font-size:.98rem;margin-bottom:2px}
+.repolist a span{color:var(--muted);font-size:.86rem}
+a{color:var(--acc2);text-decoration:none;border-bottom:1px solid rgba(62,173,172,.35)}
+a:hover{border-bottom-color:var(--acc2)}
+
+/* =========================================================
+   DEMOS — panel, controles en vivo y visualizaciones
+   ========================================================= */
+.demo{
+  background:linear-gradient(180deg,#10201a,#0c1a15);
+  border:1px solid var(--line);border-radius:18px;padding:14px 16px;
+}
+.demo-head{
+  display:flex;justify-content:space-between;gap:14px;align-items:center;
+  flex-wrap:wrap;margin-bottom:8px;
+}
+.demo-title{font-weight:700;color:#fff;font-size:1.05rem;display:flex;align-items:center;gap:9px}
+.dotlive{
+  width:10px;height:10px;border-radius:50%;background:var(--acc2);
+  box-shadow:0 0 10px var(--acc2);animation:pulse 1.4s infinite;
+}
+@keyframes pulse{50%{opacity:.35}}
+
+.ctrls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+.btn{
+  background:#152a22;border:1px solid var(--line);color:#e2ebe4;
+  border-radius:10px;padding:9px 16px;font-size:.92rem;font-weight:600;
+  cursor:pointer;transition:background .15s,border-color .15s,filter .15s;
+}
+.btn:hover{border-color:var(--acc);background:#1c3a2f}
+.btn:disabled{opacity:.5;cursor:default}
+.btn:disabled:hover{border-color:var(--line);background:#152a22}
+.btn.primary{
+  background:linear-gradient(90deg,var(--acc),#026937);
+  border-color:transparent;color:#fff;
+}
+.btn.primary:hover{filter:brightness(1.15)}
+
+/* controles en vivo: etiqueta + input/rango */
+.ctl{
+  display:flex;flex-direction:column;gap:3px;
+  background:#0c1a15;border:1px solid var(--line);
+  border-radius:11px;padding:7px 12px;min-width:170px;
+}
+.ctl label{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.ctl .rowval{display:flex;align-items:center;gap:9px}
+.ctl output{color:var(--acc2);font-weight:800;font-size:.95rem;min-width:34px;font-variant-numeric:tabular-nums}
+.ctl input[type=text]{
+  background:#0f231c;border:1px solid var(--line);color:var(--acc2);
+  border-radius:8px;padding:5px 9px;font-size:1rem;font-weight:700;
+  letter-spacing:.12em;width:170px;font-family:inherit;
+}
+.ctl input[type=text]:focus{outline:none;border-color:var(--acc2)}
+.ctl input[type=range]{flex:1;accent-color:var(--acc2);height:20px;cursor:pointer}
+.ctl select{
+  background:#0f231c;border:1px solid var(--line);color:#e2ebe4;
+  border-radius:8px;padding:5px 7px;font-size:.92rem;
+}
+
+.stats{display:flex;gap:14px;flex-wrap:wrap;font-size:.9rem;margin:2px 0 10px}
+.stat{
+  background:#0c1a15;border:1px solid var(--line);
+  border-radius:11px;padding:6px 13px;min-width:104px;
+}
+.stat b{
+  display:block;color:var(--acc2);font-size:1.15rem;
+  font-variant-numeric:tabular-nums;
+}
+.stat span{color:var(--muted);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+
+canvas{
+  display:block;width:100%;height:auto;margin:0 auto;
+  background:#0a1613;border:1px solid var(--line);border-radius:12px;
+}
+#ciudades{max-width:calc(40vh * 1.9);cursor:crosshair;touch-action:none}
+#curva{margin:0;max-width:calc(90vh)}
+.chart-label{
+  margin:0 0 6px;
+  font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);font-weight:700;
+}
+/* las dos gráficas en paralelo; el mensaje de uso queda debajo */
+.graficas{display:flex;gap:26px;align-items:center}
+.graficas #ciudades{margin:0;flex:0 0 auto}
+.curva-lado{flex:1 1 auto;min-width:0}
+
+.hint{font-size:.86rem;color:#7f9a8e;margin-top:9px}
+.hint b{color:var(--acc2)}
+
+/* filas del ejemplo de palabras */
+.srow{
+  display:grid;grid-template-columns:minmax(170px,1fr) minmax(110px,1.6fr) 40px;
+  gap:12px;align-items:center;padding:4px 0;
+  font-family:Consolas,monospace;font-size:1rem;
+}
+.srow .str{letter-spacing:.16em;color:#93a89e;white-space:nowrap;overflow:hidden}
+.srow .str .ok{color:var(--acc2);font-weight:700;text-shadow:0 0 9px rgba(62,173,172,.5)}
+.bar{height:9px;background:#16291f;border-radius:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2));transition:width .25s}
+.srow .f{color:var(--warn);font-weight:700;text-align:right}
+
+/* =========================================================
+   NAVEGACIÓN — barra inferior, puntos laterales, atajos
+   ========================================================= */
+#controls{
+  position:fixed;bottom:14px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:14px;
+  background:rgba(13,28,23,.94);border:1px solid var(--line);
+  padding:8px 16px;border-radius:999px;z-index:60;backdrop-filter:blur(10px);
+}
+#counter{
+  font-size:.88rem;color:var(--muted);
+  font-variant-numeric:tabular-nums;min-width:70px;text-align:center;
+}
+.navbtn{
+  width:38px;height:38px;border-radius:50%;border:1px solid var(--line);
+  background:#152a22;color:#e2ebe4;cursor:pointer;font-size:1.1rem;
+  line-height:1;transition:background .15s,border-color .15s;
+}
+.navbtn:hover{border-color:var(--acc2);background:#1c3a2f}
+
+#dots{
+  position:fixed;right:14px;top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:10px;z-index:60;
+}
+.dot{
+  width:10px;height:10px;border-radius:50%;background:#27453c;
+  cursor:pointer;transition:background .2s,transform .2s;border:none;padding:0;
+}
+.dot:hover{background:#3f6b5d}
+.dot.active{background:var(--acc2);transform:scale(1.5);box-shadow:0 0 9px rgba(62,173,172,.6)}
+
+#hint{
+  position:fixed;left:18px;bottom:20px;font-size:.78rem;
+  color:#7f9a8e;z-index:60;letter-spacing:.05em;
+}
+
+/* botón de la portada para exponer en pantalla completa */
+.startbtns{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px}
+.bigbtn{
+  font-size:1.05rem;font-weight:700;padding:14px 26px;border-radius:14px;
+  cursor:pointer;border:1px solid var(--line);background:#152a22;color:#eef2ff;
+  transition:background .15s,border-color .15s,filter .15s;
+}
+.bigbtn.go{
+  background:linear-gradient(90deg,var(--acc),var(--acc2));border:none;color:#08131a;
+}
+.bigbtn.go:hover{filter:brightness(1.12)}
+.bigbtn:hover{border-color:var(--acc)}
+
+@media (max-width:760px){
+  #dots{display:none}
+  #hint{display:none}
+  .slide{padding:4vh 5vw 74px}
+  .ctl{min-width:140px}
+}
+
+
+/* ---------- portada UdeA: logo + integrantes ---------- */
+.portada-top{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+.logo-udea{height:128px;width:auto;display:block}
+.integrantes{display:flex;flex-direction:column;gap:9px}
+.integrantes .kicker{margin:0}
+.integrantes p{color:var(--txt);font-size:1.08rem;font-weight:600;letter-spacing:.02em}
