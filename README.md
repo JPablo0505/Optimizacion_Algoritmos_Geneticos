@@ -1,6 +1,6 @@
-# Algoritmos Genéticos — Presentación interactiva
+# Algoritmos Genéticos: presentación interactiva
 
-Presentación de 14 diapositivas con dos demos en vivo: la evolución de una palabra y el problema del viajero. UdeA — Juan Pablo Valencia, Samuel Puerta, Guillermo Mejía.
+Presentación de 14 diapositivas (diseño claro con la identidad verde UdeA, animaciones por etapa) con dos demos en vivo: la evolución de una palabra y el problema del viajero. UdeA. Juan Pablo Valencia, Samuel Puerta, Guillermo Mejía.
 
 **Ver en línea:** https://jpablo0505.github.io/Optimizacion_Algoritmos_Geneticos/
 

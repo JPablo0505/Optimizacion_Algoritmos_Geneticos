@@ -32,7 +32,12 @@
   /* ---------- ir a una diapositiva ---------- */
   function goTo(i) {
     idx = Math.max(0, Math.min(slides.length - 1, i));
-    slides.forEach(function (s, k) { s.classList.toggle("active", k === idx); });
+    slides.forEach(function (s, k) {
+      s.classList.toggle("active", k === idx);
+      s.classList.toggle("prev", k < idx);     // las anteriores salen hacia la izquierda
+    });
+    document.body.classList.toggle("oscuro",
+      slides[idx].classList.contains("portada") || slides[idx].classList.contains("cierre"));
     Array.prototype.forEach.call(dotsEl.children, function (d, k) {
       d.classList.toggle("active", k === idx);
     });

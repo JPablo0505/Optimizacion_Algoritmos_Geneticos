@@ -241,8 +241,8 @@
   function dibujarRuta() {
     ctx.clearRect(0, 0, W, H);
     if (mejorRuta.length && ciudades.length) {
-      ctx.strokeStyle = "rgba(141,198,63,.95)";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(2,105,55,.9)";
+      ctx.lineWidth = 2.6;
       ctx.lineJoin = "round";
       ctx.beginPath();
       for (var i = 0; i < mejorRuta.length; i++) {
@@ -256,11 +256,11 @@
       var q = ciudades[c];
       var inicio = mejorRuta.length > 0 && mejorRuta[0] === c;
       ctx.beginPath();
-      ctx.arc(q.x, q.y, inicio ? 6.5 : 4.2, 0, Math.PI * 2);
-      ctx.fillStyle = inicio ? "#8dc63f" : "#3ebdac";
+      ctx.arc(q.x, q.y, inicio ? 7.5 : 5, 0, Math.PI * 2);
+      ctx.fillStyle = inicio ? "#026937" : "#0e8c7f";
       ctx.fill();
       ctx.lineWidth = 2;
-      ctx.strokeStyle = "#0a1613";
+      ctx.strokeStyle = "#ffffff";
       ctx.stroke();
       if (arrastrando === c) {
         ctx.strokeStyle = "#f9a12c";
@@ -271,20 +271,20 @@
       }
     }
     if (mejorRuta.length) {
-      ctx.fillStyle = "rgba(141,198,63,.95)";
-      ctx.font = '600 15px "Segoe UI", sans-serif';
+      ctx.fillStyle = "#026937";
+      ctx.font = '700 16px "Plus Jakarta Sans", "Segoe UI", sans-serif';
       ctx.fillText("Inicio", ciudades[mejorRuta[0]].x + 10, ciudades[mejorRuta[0]].y - 8);
-      ctx.fillStyle = "rgba(163,188,174,.85)";
-      ctx.font = '14px "Segoe UI", sans-serif';
-      ctx.fillText(ciudades.length + " barrios · el camino cierra solo: empieza y termina en el mismo punto", 14, H - 14);
+      ctx.fillStyle = "#5d7266";
+      ctx.font = '14px "Plus Jakarta Sans", "Segoe UI", sans-serif';
+      ctx.fillText(ciudades.length + " barrios: el camino cierra solo, empieza y termina en el mismo punto", 14, H - 14);
     }
   }
 
   function dibujarCurva() {
     cctx.clearRect(0, 0, CW, CH);
     if (historial.length < 2) {
-      cctx.fillStyle = "#7f9a8e";
-      cctx.font = '16px "Segoe UI", sans-serif';
+      cctx.fillStyle = "#6a7d71";
+      cctx.font = '16px "Plus Jakarta Sans", "Segoe UI", sans-serif';
       cctx.fillText(arrancado ? "La primera mejora aparece en un segundo…"
                               : "Presione Empezar para ver la evolución…", 14, CH / 2);
       return;
@@ -299,7 +299,7 @@
     function X(k) { return izq + (k / (historial.length - 1)) * (CW - izq - der); }
     function Y(v) { return arr + (1 - (v - mn) / rango) * (CH - arr - aba); }
 
-    cctx.strokeStyle = "#1f3a2e";
+    cctx.strokeStyle = "#cddbd0";
     cctx.lineWidth = 1;
     cctx.beginPath();
     cctx.moveTo(izq, arr);
@@ -310,28 +310,28 @@
     cctx.beginPath();
     cctx.moveTo(X(0), Y(historial[0]));
     for (i = 1; i < historial.length; i++) cctx.lineTo(X(i), Y(historial[i]));
-    cctx.strokeStyle = "#8dc63f";
-    cctx.lineWidth = 2;
+    cctx.strokeStyle = "#026937";
+    cctx.lineWidth = 2.6;
     cctx.lineJoin = "round";
     cctx.stroke();
 
     var degradado = cctx.createLinearGradient(0, arr, 0, CH - aba);
-    degradado.addColorStop(0, "rgba(141,198,63,.30)");
-    degradado.addColorStop(1, "rgba(141,198,63,0)");
+    degradado.addColorStop(0, "rgba(67,182,73,.30)");
+    degradado.addColorStop(1, "rgba(67,182,73,0)");
     cctx.lineTo(X(historial.length - 1), CH - aba);
     cctx.lineTo(X(0), CH - aba);
     cctx.closePath();
     cctx.fillStyle = degradado;
     cctx.fill();
 
-    cctx.font = '14px "Segoe UI", sans-serif';
-    cctx.fillStyle = "#93a89e";
+    cctx.font = '14px "Plus Jakarta Sans", "Segoe UI", sans-serif';
+    cctx.fillStyle = "#6a7d71";
     cctx.textAlign = "right";
     cctx.fillText(mx.toFixed(0), izq - 6, arr + 10);
     cctx.fillText(mn.toFixed(0), izq - 6, CH - aba);
     cctx.textAlign = "left";
-    cctx.fillStyle = "#8dc63f";
-    cctx.font = "600 16px 'Segoe UI', sans-serif";
+    cctx.fillStyle = "#026937";
+    cctx.font = "700 16px 'Plus Jakarta Sans', 'Segoe UI', sans-serif";
     cctx.fillText("mejor: " + historial[historial.length - 1].toFixed(1),
       Math.min(X(historial.length - 1) + 6, CW - 120),
       Math.max(Y(historial[historial.length - 1]) - 7, 15));
@@ -341,10 +341,10 @@
     dibujarRuta();
     dibujarCurva();
     elGen.textContent = generacion;
-    elMejor.textContent = mejorD === Infinity ? "—" : mejorD.toFixed(1);
-    elInicial.textContent = inicialD == null ? "—" : inicialD.toFixed(1);
+    elMejor.textContent = mejorD === Infinity ? "-" : mejorD.toFixed(1);
+    elInicial.textContent = inicialD == null ? "-" : inicialD.toFixed(1);
     elMejora.textContent = (inicialD && mejorD < Infinity)
-      ? ((inicialD - mejorD) / inicialD * 100).toFixed(0) + "%" : "—";
+      ? ((inicialD - mejorD) / inicialD * 100).toFixed(0) + "%" : "-";
     actualizarEstado();
   }
 

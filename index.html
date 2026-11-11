@@ -3,38 +3,47 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Algoritmos Genéticos — Presentación interactiva</title>
+<title>Algoritmos Genéticos: presentación interactiva</title>
 <link rel="icon" href="data:,">
+<script>document.documentElement.className="js";</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/estilos.css">
 </head>
 <body>
 <div id="progress"></div>
 <main id="deck">
 
-<!-- 1 · Portada -->
-<section class="slide active" data-title="Portada">
-  <div class="portada-top">
-    <img class="logo-udea" src="assets/logo-udea-blanco.png" alt="Logo de la Universidad de Antioquia">
-    <div class="integrantes">
-      <span class="kicker">Optimizacion - UdeA</span>
-      <p>Juan Pablo Valencia · Samuel Puerta · Guillermo Mejía</p>
+<!-- 1. Portada -->
+<section class="slide active portada" data-title="Portada">
+  <div class="portada-grid seq">
+    <div class="portada-izq seq">
+      <div class="portada-top">
+        <img class="logo-udea" src="assets/logo-udea-blanco.png" alt="Logo de la Universidad de Antioquia">
+        <div class="integrantes">
+          <span class="kicker">Optimización UdeA</span>
+          <p><span>Juan Pablo Valencia</span><span>Samuel Puerta</span><span>Guillermo Mejía</span></p>
+        </div>
+      </div>
+      <h1><span class="l"><i>Algoritmos</i></span><span class="l"><i>Genéticos</i></span></h1>
+      <p class="lead">Cómo dejar que <strong>la evolución</strong> resuelva problemas difíciles</p>
+      <div class="startbtns">
+        <button class="bigbtn go" id="btn-empezar">Comenzar</button>
+      </div>
     </div>
-  </div>
-  <h1>Algoritmos<br>Genéticos</h1>
-  <p class="lead">Cómo dejar que <strong>la evolución</strong> resuelva problemas difíciles</p>
-  <div class="startbtns">
-    <button class="bigbtn go" id="btn-empezar">Comenzar →</button>
+    <div class="genes" id="genes" aria-hidden="true"></div>
   </div>
 </section>
 
-<!-- 2 · ¿Qué son? -->
+<!-- 2. ¿Qué son? -->
 <section class="slide" data-title="¿Qué son?">
   <span class="kicker">La idea en una frase</span>
-  <h2><span class="n">01</span> ¿Qué es un algoritmo genético?</h2>
+  <h2>¿Qué es un algoritmo genético?</h2>
   <p class="lead">Una manera de encontrar respuestas <strong>buenas</strong> probando muchas ideas a la
-  vez, descartando las peores y <strong>mezclando las mejores</strong> — tal como hace la naturaleza
+  vez, descartando las peores y <strong>mezclando las mejores</strong>, tal como hace la naturaleza
   con los animales.</p>
-  <div class="grid wide">
+  <div class="grid c3">
     <div class="card o"><span class="tag">Piénselo así</span><h3>La receta de la pizza</h3>
       <p>Se quiere la mejor pizza del mundo. No se van a probar todas las combinaciones posibles: se
       hacen muchas pizzas, se conservan las que más gustaron y <b>se mezclan sus secretos</b>. Eso, en
@@ -43,49 +52,53 @@
       <p>Busca una solución <b>muy buena, y rápido</b>. Cuando “probar todo” llevaría siglos,
       llegar a algo excelente en segundos es ganar.</p></div>
     <div class="card"><span class="tag">Para qué sirve</span><h3>Cuando hay mil opciones</h3>
-      <p>Cuando hay miles —o millones— de combinaciones posibles y no se sabe por dónde empezar:
+      <p>Cuando hay miles, o millones, de combinaciones posibles y no se sabe por dónde empezar:
       rutas, horarios, diseños, presupuestos.</p></div>
   </div>
 </section>
 
-<!-- 3 · La idea de Darwin -->
+<!-- 3. La idea de Darwin -->
 <section class="slide" data-title="La idea de Darwin">
   <span class="kicker">De dónde viene</span>
-  <h2><span class="n">02</span> La naturaleza ya lo hacía primero</h2>
+  <h2>La naturaleza ya lo hacía primero</h2>
   <p class="lead">Darwin lo explicó así: los animales que <strong>mejor se adaptan</strong> sobreviven y
-  tienen hijos parecidos. Un algoritmo genético hace lo mismo… pero con datos:</p>
-  <table>
-    <tr><th>En la naturaleza</th><th>En el algoritmo</th></tr>
-    <tr><td>Un individuo</td><td>Una solución posible (por ejemplo, una ruta de reparto)</td></tr>
-    <tr><td>La especie</td><td>La <strong>población</strong>: muchas soluciones compitiendo a la vez</td></tr>
-    <tr><td>Qué tan bien se adapta</td><td>El <strong>puntaje</strong>: qué tan buena es para el problema</td></tr>
-    <tr><td>Tener hijos</td><td><strong>Cruzar</strong>: mezclar lo mejor de dos buenas soluciones</td></tr>
-    <tr><td>Un rasgo raro nuevo</td><td><strong>Mutar</strong>: cambiar algo de vez en cuando</td></tr>
-    <tr><td>Una nueva camada</td><td>Una <strong>generación</strong>: un turno más del juego</td></tr>
-  </table>
-  <div class="okbox"><p><strong>La receta completa:</strong> crear muchas ideas → medir cuáles son
-  mejores → mezclar lo mejor → cambiar algo poco → repetir. ¡Nada más!</p></div>
+  tienen hijos parecidos. Un algoritmo genético hace lo mismo, pero con datos:</p>
+  <div class="split">
+    <div class="tabla">
+      <table>
+        <tr><th>En la naturaleza</th><th>En el algoritmo</th></tr>
+        <tr><td>Un individuo</td><td>Una solución posible (por ejemplo, una ruta de reparto)</td></tr>
+        <tr><td>La especie</td><td>La <strong>población</strong>: muchas soluciones compitiendo a la vez</td></tr>
+        <tr><td>Qué tan bien se adapta</td><td>El <strong>puntaje</strong>: qué tan buena es para el problema</td></tr>
+        <tr><td>Tener hijos</td><td><strong>Cruzar</strong>: mezclar lo mejor de dos buenas soluciones</td></tr>
+        <tr><td>Un rasgo raro nuevo</td><td><strong>Mutar</strong>: cambiar algo de vez en cuando</td></tr>
+        <tr><td>Una nueva camada</td><td>Una <strong>generación</strong>: un turno más del juego</td></tr>
+      </table>
+    </div>
+    <div class="okbox grande"><p><strong>La receta completa:</strong> crear muchas ideas, medir cuáles son
+    mejores, mezclar lo mejor, cambiar algo poco y repetir. ¡Nada más!</p></div>
+  </div>
 </section>
 
-<!-- 4 · El proceso -->
+<!-- 4. El proceso -->
 <section class="slide" data-title="El proceso">
   <span class="kicker">El bucle</span>
-  <h2><span class="n">03</span> El proceso, en 6 pasos</h2>
+  <h2>El proceso, en 6 pasos</h2>
   <div class="flow">
-    <div class="step"><b>Paso 1</b>Crear muchas soluciones al azar</div><span class="arrow">→</span>
-    <div class="step"><b>Paso 2</b>Puntuar cada una</div><span class="arrow">→</span>
-    <div class="step"><b>Paso 3</b>Elegir las mejores</div><span class="arrow">→</span>
-    <div class="step"><b>Paso 4</b>Mezclarlas (cruzar)</div><span class="arrow">→</span>
-    <div class="step"><b>Paso 5</b>Cambiar algo de vez en cuando (mutar)</div><span class="arrow">→</span>
-    <div class="step"><b>Paso 6</b>Repetir</div>
+    <div class="step" style="--k:0"><b>Paso 1</b>Crear muchas soluciones al azar</div>
+    <div class="step" style="--k:1"><b>Paso 2</b>Puntuar cada una</div>
+    <div class="step" style="--k:2"><b>Paso 3</b>Elegir las mejores</div>
+    <div class="step" style="--k:3"><b>Paso 4</b>Mezclarlas (cruzar)</div>
+    <div class="step" style="--k:4"><b>Paso 5</b>Cambiar algo de vez en cuando (mutar)</div>
+    <div class="step" style="--k:5"><b>Paso 6</b>Repetir</div>
   </div>
-  <p class="loop">↻ Y otra vez… hasta que pase UNA de estas tres cosas:</p>
+  <p class="loop"><span class="spin">↻</span> Y otra vez… hasta que pase UNA de estas tres cosas:</p>
   <div class="warnbox"><p><strong>¿Cuándo se detiene?</strong> 1) cuando encuentra algo
   <strong>bueno de verdad</strong> (la solución “suficiente”); 2) cuando <strong>pasan muchas
   generaciones sin mejorar</strong> (se estancó: ya no progresa); 3) cuando <strong>se acaba el
   tiempo</strong> que le diste. Ninguno busca “la perfecta”: el algoritmo es un buen explorador,
   no un perfeccionista.</p></div>
-  <div class="grid">
+  <div class="grid c3">
     <div class="card o"><span class="tag">Al principio</span>
       <p>Todas las soluciones son malas: son <b>al azar</b>. Parece un desastre…</p></div>
     <div class="card g"><span class="tag">Después de un rato</span>
@@ -95,21 +108,21 @@
   </div>
 </section>
 
-<!-- 5 · Los 3 superpoderes -->
+<!-- 5. Los 3 superpoderes -->
 <section class="slide" data-title="Los 3 superpoderes">
   <span class="kicker">La maquinaria</span>
-  <h2><span class="n">04</span> Los 3 superpoderes del algoritmo</h2>
-  <div class="grid">
+  <h2>Los 3 superpoderes del algoritmo</h2>
+  <div class="grid c3">
     <div class="card">
-      <span class="tag">1 · Selección</span>
+      <span class="tag">1. Selección</span>
       <h3>El jurado</h3>
       <p>Los candidatos mejores pasan de ronda; los peores quedan afuera. Si el jurado es
       <b>demasiado estricto</b>, todos terminan siendo iguales y el juego se estanca.</p>
-      <p class="small" style="margin-top:6px">Se arregla eligiendo “los mejores de un grupo
+      <p class="small" style="margin-top:.6rem">Se arregla eligiendo “los mejores de un grupo
       sorteado”, no los mejores absolutos siempre.</p>
     </div>
     <div class="card g">
-      <span class="tag">2 · Cruce (mezcla)</span>
+      <span class="tag">2. Cruce (mezcla)</span>
       <h3>Juntar dos recetas ganadoras</h3>
       <p class="small">Se toma la base de uno y el toque secreto del otro: de ahí sale un hijo
       prometedor. Así se ven las tres formas de mezclar:</p>
@@ -123,14 +136,14 @@
       </div>
     </div>
     <div class="card o">
-      <span class="tag">3 · Mutación</span>
+      <span class="tag">3. Mutación</span>
       <h3>Un cambio raro, de vez en cuando</h3>
       <p class="small">Cambia una piecita al azar. Evita que todos sean idénticos… y a veces
       aparece una genialidad nadie hubiera pensado.</p>
       <div class="mini">
         <span class="lab">Antes</span>
         <div class="cells"><span class="cell same">0</span><span class="cell same">1</span><span class="cell same">1</span><span class="cell mut">1</span><span class="cell same">0</span><span class="cell same">1</span></div>
-        <span class="lab">Después → cambió una pieza</span>
+        <span class="lab">Después: cambió una pieza</span>
         <div class="cells"><span class="cell same">0</span><span class="cell same">1</span><span class="cell same">1</span><span class="cell pb">0</span><span class="cell same">0</span><span class="cell same">1</span></div>
       </div>
     </div>
@@ -140,11 +153,11 @@
   mantiene abierta la puerta a lo nuevo.</p></div>
 </section>
 
-<!-- 6 · ¿Cuándo usarlo? -->
+<!-- 6. ¿Cuándo usarlo? -->
 <section class="slide" data-title="¿Cuándo usarlo?">
   <span class="kicker">Elegir bien la herramienta</span>
-  <h2><span class="n">05</span> ¿Cuándo conviene usar uno?</h2>
-  <div class="grid">
+  <h2>¿Cuándo conviene usar uno?</h2>
+  <div class="grid c2">
     <div class="card g"><span class="tag">Sí, úselo cuando…</span>
       <ul>
         <li>Hay <b>millones de combinaciones</b> y revisarlas todas es imposible.</li>
@@ -165,11 +178,11 @@
   Es una apuesta excelente cuando lo perfecto es imposible y lo bueno sí alcanza.</p></div>
 </section>
 
-<!-- 7 · Aplicaciones -->
+<!-- 7. Aplicaciones -->
 <section class="slide" data-title="Aplicaciones">
   <span class="kicker">Donde ya está pasando</span>
-  <h2><span class="n">06</span> ¿Dónde se usa en la vida real?</h2>
-  <div class="grid">
+  <h2>¿Dónde se usa en la vida real?</h2>
+  <div class="grid c3">
     <div class="card"><span class="tag">Repartos</span><h3>Logística</h3>
       <p>Rutas de camiones y camionetas, recolección de residuos, entrega de pedidos.</p></div>
     <div class="card"><span class="tag">Organización</span><h3>Horarios</h3>
@@ -185,23 +198,23 @@
   </div>
 </section>
 
-<!-- 8 · El viajero -->
+<!-- 8. El viajero -->
 <section class="slide" data-title="El viajero">
   <span class="kicker">El problema clásico</span>
-  <h2><span class="n">07</span> El problema del viajero</h2>
-  <div class="okbox"><p><strong>El reto:</strong> un repartidor tiene que pasar por <strong>todos</strong>
+  <h2>El problema del viajero</h2>
+  <div class="okbox grande"><p><strong>El reto:</strong> un repartidor tiene que pasar por <strong>todos</strong>
   los barrios y volver a la empresa, sin repetir ninguno. ¿Cuál es el camino más corto?</p></div>
-  <div class="grid">
+  <div class="grid c3">
     <div class="card o"><span class="tag">Se complica muy rápido</span>
       <ul>
-        <li>5 barrios → solo <b>12</b> caminos posibles</li>
-        <li>10 barrios → <b>más de 180 mil</b></li>
-        <li>20 barrios → <b>más de 100 mil millones</b></li>
+        <li>5 barrios: solo <b>12</b> caminos posibles</li>
+        <li>10 barrios: <b>más de 180 mil</b></li>
+        <li>20 barrios: <b>más de 100 mil millones</b></li>
       </ul></div>
     <div class="card"><span class="tag">Revisar todo es imposible</span>
       <p>A un intento por segundo, revisar los caminos de <b>20 barrios llevaría más de 3.000 años</b>.
       Por eso nadie lo resuelve buscando “todo”: se usan <b>atajos inteligentes</b>.</p>
-      <p class="small" style="margin-top:6px;color:#7f9a8e">Para los curiosos: las opciones crecen
+      <p class="small" style="margin-top:.6rem;color:var(--soft)">Para los curiosos: las opciones crecen
       como el factorial de la cantidad de paradas.</p></div>
     <div class="card g"><span class="tag">Se usa todo el tiempo</span>
       <p>Repartos de paquetería, visitas médicas a domicilio, rutas de camiones, ordenar piezas en
@@ -209,40 +222,48 @@
   </div>
 </section>
 
-<!-- 9 · GA + viajero -->
+<!-- 9. GA + viajero -->
 <section class="slide" data-title="GA + viajero">
   <span class="kicker">Aplicando lo aprendido</span>
-  <h2><span class="n">08</span> Cómo lo resuelve un algoritmo genético</h2>
+  <h2>Cómo lo resuelve un algoritmo genético</h2>
   <p class="lead">Cada candidato es <strong>una ruta completa</strong>. Y después, el mismo proceso
   de siempre:</p>
-  <ol style="max-width:70ch">
-    <li>Crear <strong>100 rutas al azar</strong>.</li>
-    <li><strong>Sumar la distancia</strong> de cada una — ese es su puntaje (más corta = mejor).</li>
-    <li><strong>Elegir las mejores</strong> rutas.</li>
-    <li><strong>Mezclar tramos</strong> de dos buenas rutas, cuidando que ningún barrio se repita
-      (se llama “cruce por orden”).</li>
-    <li><strong>Girar un tramo</strong> de vez en cuando — eso es la mutación.</li>
-    <li><strong>Repetir</strong> cientos de veces — hasta que <strong>deje de mejorar</strong>
-      o se acabe el tiempo.</li>
-  </ol>
-  <div class="okbox"><p>En segundos suele encontrar un camino <strong>mucho más corto</strong> que el
-  azar — normalmente <strong>un 40–60% menos de distancia</strong>. No siempre es el mejor del mundo,
-  pero es rapidísimo y muy bueno.</p></div>
-  <div class="warnbox"><p><strong>¿Y cuándo para?</strong> No espera “la mejor ruta del mundo”: para
-  cuando <strong>deja de mejorar durante un rato</strong> (se estancó) o cuando <strong>se acaba el
-  tiempo</strong>. En el ejemplo se verá que <strong>se detiene solo</strong> y lo avisa con el
-  estado.</p></div>
-  <p class="small" style="color:#7f9a8e">Lo único delicado: como un candidato es una lista de barrios
-  <em>sin repetir</em>, el cruce y la mutación tienen que respetar esa regla. Por eso existen mezclas
-  especiales para listas.</p>
+  <div class="split eq">
+    <ol class="pasos">
+      <li>Crear <strong>100 rutas al azar</strong>.</li>
+      <li><strong>Sumar la distancia</strong> de cada una: ese es su puntaje (más corta = mejor).</li>
+      <li><strong>Elegir las mejores</strong> rutas.</li>
+      <li><strong>Mezclar tramos</strong> de dos buenas rutas, cuidando que ningún barrio se repita
+        (se llama “cruce por orden”).</li>
+      <li><strong>Girar un tramo</strong> de vez en cuando: eso es la mutación.</li>
+      <li><strong>Repetir</strong> cientos de veces, hasta que <strong>deje de mejorar</strong>
+        o se acabe el tiempo.</li>
+    </ol>
+    <div class="stack">
+      <div class="okbox"><p>En segundos suele encontrar un camino <strong>mucho más corto</strong> que el
+      azar, normalmente <strong>un 40 a 60% menos de distancia</strong>. No siempre es el mejor del mundo,
+      pero es rapidísimo y muy bueno.</p></div>
+      <div class="warnbox"><p><strong>¿Y cuándo para?</strong> No espera “la mejor ruta del mundo”: para
+      cuando <strong>deja de mejorar durante un rato</strong> (se estancó) o cuando <strong>se acaba el
+      tiempo</strong>. En el ejemplo se verá que <strong>se detiene solo</strong> y lo avisa con el
+      estado.</p></div>
+      <p class="small" style="color:var(--soft)">Lo único delicado: como un candidato es una lista de barrios
+      <em>sin repetir</em>, el cruce y la mutación tienen que respetar esa regla. Por eso existen mezclas
+      especiales para listas.</p>
+    </div>
+  </div>
 </section>
 
-<!-- 10 · Ejemplo: palabras -->
+<!-- 10. Ejemplo: palabras -->
 <section class="slide" data-title="Ejemplo: palabras" id="slide-demo-palabra">
-  <span class="kicker">Ejemplo 1 · en vivo</span>
-  <h2><span class="n">09</span> Observe evolucionar una palabra</h2>
-  <p class="lead">Una población de palabras <strong>al azar</strong> quiere llegar a la suya.
-  <strong>Cambie los datos mientras corre</strong> y observe qué pasa.</p>
+  <div class="cab-demo seq">
+    <div class="seq-t seq">
+      <span class="kicker">Ejemplo 1 en vivo</span>
+      <h2>Observe evolucionar una palabra</h2>
+    </div>
+    <p class="lead">Una población de palabras <strong>al azar</strong> quiere llegar a la suya.
+    <strong>Cambie los datos mientras corre</strong> y observe qué pasa.</p>
+  </div>
   <div class="demo">
     <div class="demo-head">
       <div class="demo-title"><span class="dotlive"></span> Palabras compitiendo por la palabra objetivo</div>
@@ -252,63 +273,71 @@
       </div>
     </div>
 
-    <div class="ctrls" style="margin-bottom:12px">
-      <div class="ctl">
-        <label for="obj-palabra">Palabra objetivo</label>
-        <input type="text" id="obj-palabra" value="GENETICA" maxlength="10"
-               autocomplete="off" spellcheck="false">
+    <div class="demo-body palabra">
+      <div class="demo-side">
+        <div class="ctrls vert">
+          <div class="ctl">
+            <label for="obj-palabra">Palabra objetivo</label>
+            <input type="text" id="obj-palabra" value="GENETICA" maxlength="10"
+                   autocomplete="off" spellcheck="false">
+          </div>
+          <div class="ctl">
+            <label for="obj-pob">Tamaño de la población</label>
+            <div class="rowval"><input type="range" id="obj-pob" min="10" max="80" step="5" value="40">
+              <output id="val-pob">40</output></div>
+          </div>
+          <div class="ctl">
+            <label for="obj-mut">Mutación</label>
+            <div class="rowval"><input type="range" id="obj-mut" min="0" max="10" step="1" value="3">
+              <output id="val-mut">3%</output></div>
+          </div>
+          <div class="ctl">
+            <label for="obj-vel">Velocidad</label>
+            <div class="rowval"><select id="obj-vel">
+              <option value="260">Lenta</option>
+              <option value="110" selected>Normal</option>
+              <option value="40">Rápida</option>
+            </select></div>
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><b id="obj-gen">0</b><span>Generación</span></div>
+          <div class="stat"><b id="obj-mejor">0/8</b><span>Mejor puntaje</span></div>
+          <div class="stat"><b id="obj-prom">0</b><span>Promedio</span></div>
+          <div class="stat estado"><b id="obj-estado">Listo para iniciar</b><span>Estado</span></div>
+        </div>
       </div>
-      <div class="ctl">
-        <label for="obj-pob">Tamaño de la población</label>
-        <div class="rowval"><input type="range" id="obj-pob" min="10" max="80" step="5" value="40">
-          <output id="val-pob">40</output></div>
-      </div>
-      <div class="ctl">
-        <label for="obj-mut">Mutación</label>
-        <div class="rowval"><input type="range" id="obj-mut" min="0" max="10" step="1" value="3">
-          <output id="val-mut">3%</output></div>
-      </div>
-      <div class="ctl">
-        <label for="obj-vel">Velocidad</label>
-        <div class="rowval"><select id="obj-vel">
-          <option value="260">Lenta</option>
-          <option value="110" selected>Normal</option>
-          <option value="40">Rápida</option>
-        </select></div>
+      <div class="demo-main">
+        <div id="obj-filas"></div>
+        <p class="hint"><b>Qué observar:</b> las letras en <b>verde</b> ya están en su lugar. Todavía no
+        corre: pulse <b>Empezar</b> cuando quiera. <b>Se detiene solo</b> cuando encuentra la palabra;
+        si pasan <b>150 generaciones sin mejorar</b>, también se detiene y lo avisa (pruebe subir la
+        mutación). Cambie la palabra objetivo mientras corre y la población se adapta al momento.</p>
       </div>
     </div>
-
-    <div class="stats">
-      <div class="stat"><b id="obj-gen">0</b><span>Generación</span></div>
-      <div class="stat"><b id="obj-mejor">0/8</b><span>Mejor puntaje</span></div>
-      <div class="stat"><b id="obj-prom">0</b><span>Promedio</span></div>
-      <div class="stat"><b id="obj-estado" style="font-size:.95rem">Listo para iniciar</b><span>Estado</span></div>
-    </div>
-
-    <div id="obj-filas"></div>
-    <p class="hint"><b>Qué observar:</b> las letras en <b>verde</b> ya están en su lugar. Todavía no
-    corre: pulse <b>Empezar</b> cuando quiera. <b>Se detiene solo</b> cuando encuentra la palabra;
-    si pasan <b>150 generaciones sin mejorar</b>, también se detiene y lo avisa (pruebe subir la
-    mutación). Cambie la palabra objetivo mientras corre y la población se adapta al momento.</p>
   </div>
 </section>
 
-<!-- 11 · Ejemplo: el viajero -->
+<!-- 11. Ejemplo: el viajero -->
 <section class="slide" data-title="Ejemplo: el viajero" id="slide-demo-viajero">
-  <span class="kicker">Ejemplo 2 · en vivo</span>
-  <h2><span class="n">10</span> El repartidor, evolucionando</h2>
-  <p class="lead">Los <strong>puntos son barrios</strong>; la línea verde es la <strong>mejor ruta</strong>
-  encontrada.</p>
+  <div class="cab-demo seq">
+    <div class="seq-t seq">
+      <span class="kicker">Ejemplo 2 en vivo</span>
+      <h2>El repartidor, evolucionando</h2>
+    </div>
+    <p class="lead">Los <strong>puntos son barrios</strong>; la línea verde es la <strong>mejor ruta</strong>
+    encontrada.</p>
+  </div>
   <div class="demo">
     <div class="demo-head">
-      <div class="demo-title"><span class="dotlive"></span> Ruta ganadora · el mejor camino hasta ahora</div>
+      <div class="demo-title"><span class="dotlive"></span> Ruta ganadora: el mejor camino hasta ahora</div>
       <div class="ctrls">
         <button class="btn primary" id="via-play">▶ Empezar</button>
         <button class="btn" id="via-reset">↻ Barrios nuevos</button>
       </div>
     </div>
 
-    <div class="ctrls" style="margin-bottom:12px">
+    <div class="ctrls fila">
       <div class="ctl">
         <label for="via-ciudades">Cantidad de barrios</label>
         <div class="rowval"><input type="range" id="via-ciudades" min="6" max="36" step="1" value="24">
@@ -334,35 +363,40 @@
       </div>
     </div>
 
-    <div class="stats">
-      <div class="stat"><b id="via-gen">0</b><span>Generación</span></div>
-      <div class="stat"><b id="via-mejor">—</b><span>Mejor distancia</span></div>
-      <div class="stat"><b id="via-inicial">—</b><span>Al empezar</span></div>
-      <div class="stat"><b id="via-mejora">—</b><span>Mejora</span></div>
-      <div class="stat"><b id="via-estado" style="font-size:.95rem">Listo para iniciar</b><span>Estado</span></div>
-    </div>
-
-    <div class="graficas">
+    <div class="demo-body viaje">
       <canvas id="ciudades" width="760" height="400"></canvas>
-      <div class="curva-lado">
-        <div class="chart-label">Evolución de la mejor distancia por generación</div>
-        <canvas id="curva" width="760" height="320"></canvas>
+      <div class="graf-lado">
+        <div class="stats" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+          <div class="stat"><b id="via-gen">0</b><span>Generación</span></div>
+          <div class="stat"><b id="via-mejor">-</b><span>Mejor distancia</span></div>
+          <div class="stat"><b id="via-inicial">-</b><span>Al empezar</span></div>
+          <div class="stat"><b id="via-mejora">-</b><span>Mejora</span></div>
+          <div class="stat estado" style="grid-column:span 2"><b id="via-estado">Listo para iniciar</b><span>Estado</span></div>
+        </div>
+        <div class="curva-lado">
+          <div class="chart-label">Evolución de la mejor distancia por generación</div>
+          <canvas id="curva" width="760" height="320"></canvas>
+        </div>
       </div>
     </div>
     <p class="hint"><b>No corre hasta que presione Empezar.</b> Se <b>detiene solo</b> cuando 200
-    generaciones no mejoran — suba la mutación o pulse <b>Seguir</b>. Mapa: clic en vacío =
-    <b>agregar</b> · clic en barrio = <b>quitar</b> · <b>arrastrar</b> = mover.</p>
+    generaciones no mejoran: suba la mutación o pulse <b>Seguir</b>. En el mapa, un clic en vacío
+    <b>agrega</b> un barrio, un clic sobre un barrio lo <b>quita</b> y arrastrar lo <b>mueve</b>.</p>
   </div>
 </section>
 
-<!-- 12 · Código Python -->
+<!-- 12. Código Python -->
 <section class="slide" data-title="Código Python">
-  <span class="kicker">Para el que quiera probarlo</span>
-  <h2><span class="n">11</span> El mismo ejemplo, en Python</h2>
-  <p class="lead">Sin instalaciones especiales: copie esto en un archivo <strong>ruta.py</strong> y
-  ejecútelo con <strong>python ruta.py</strong>. Está todo comentado y es exactamente lo que acaba
-  de ver: <strong>medir → mezclar → cambiar → repetir</strong>.</p>
-  <pre class="code"><span class="k">import</span> random, math
+  <div class="cab-demo seq">
+    <div class="seq-t seq">
+      <span class="kicker">Para el que quiera probarlo</span>
+      <h2>El mismo ejemplo, en Python</h2>
+    </div>
+    <p class="lead">Sin instalaciones especiales: copie esto en un archivo <strong>ruta.py</strong> y
+    ejecútelo con <strong>python ruta.py</strong>. Está todo comentado y es exactamente lo que acaba
+    de ver: <strong>medir, mezclar, cambiar, repetir</strong>.</p>
+  </div>
+  <pre class="code dos"><span class="k">import</span> random, math
 
 random.<span class="f">seed</span>(<span class="o">42</span>)
 CIUDADES = [(random.<span class="f">random</span>(), random.<span class="f">random</span>()) <span class="k">for</span> _ <span class="k">in</span> <span class="f">range</span>(<span class="o">20</span>)]
@@ -400,7 +434,7 @@ CIUDADES = [(random.<span class="f">random</span>(), random.<span class="f">rand
     <span class="k">return</span> <span class="f">min</span>(random.<span class="f">sample</span>(<span class="f">range</span>(<span class="f">len</span>(poblacion)), cuantos),
               <span class="k">key</span>=<span class="k">lambda</span> i: distancias[i])
 
-<span class="c"># ---- el bucle principal: 500 generaciones ----</span>
+<span class="c"># El bucle principal: 500 generaciones</span>
 poblacion = [random.<span class="f">sample</span>(<span class="f">range</span>(<span class="o">20</span>), <span class="o">20</span>) <span class="k">for</span> _ <span class="k">in</span> <span class="f">range</span>(<span class="o">120</span>)]
 mejor_ruta, mejor_d = <span class="k">None</span>, <span class="k">None</span>
 
@@ -421,28 +455,28 @@ mejor_ruta, mejor_d = <span class="k">None</span>, <span class="k">None</span>
 <span class="f">print</span>(<span class="s">f"Mejor ruta encontrada en 500 generaciones: {mejor_d:.4f}"</span>)</pre>
 </section>
 
-<!-- 13 · Librerías -->
+<!-- 13. Librerías -->
 <section class="slide" data-title="Librerías">
   <span class="kicker">Atajos para la vida real</span>
-  <h2><span class="n">12</span> No hay que escribirlo todo desde cero</h2>
+  <h2>No hay que escribirlo todo desde cero</h2>
   <p class="lead">Si algún día desea aplicarlo a <strong>su propio problema</strong>, estas librerías
   ya traen el motor armado; solo hay que indicar qué optimizar:</p>
-  <div class="grid wide">
+  <div class="grid c3">
     <div class="card"><span class="tag">Python</span>
       <ul>
-        <li><a href="https://github.com/DEAP/deap" target="_blank" rel="noopener"><b>DEAP</b></a> —
+        <li><a href="https://github.com/DEAP/deap" target="_blank" rel="noopener"><b>DEAP</b></a>:
           el más completo y usado en universidades. Gratis, puro <code>pip install deap</code>.</li>
-        <li><a href="https://pygad.readthedocs.io/" target="_blank" rel="noopener"><b>PyGAD</b></a> —
+        <li><a href="https://pygad.readthedocs.io/" target="_blank" rel="noopener"><b>PyGAD</b></a>:
           el más fácil de empezar, con tutorial paso a paso y buenas imágenes.</li>
-        <li><a href="https://github.com/anyoptimization/pymoo" target="_blank" rel="noopener"><b>pymoo</b></a> —
+        <li><a href="https://github.com/anyoptimization/pymoo" target="_blank" rel="noopener"><b>pymoo</b></a>:
           ideal si tiene <b>varios objetivos</b> a la vez (barato Y rápido…).</li>
-        <li><a href="https://github.com/danielwilczak101/EasyGA" target="_blank" rel="noopener"><b>EasyGA</b></a> —
+        <li><a href="https://github.com/danielwilczak101/EasyGA" target="_blank" rel="noopener"><b>EasyGA</b></a>:
           escrito para que se lea como un cuento: perfecto para aprender.</li>
       </ul></div>
     <div class="card g"><span class="tag">Ejemplos reales del viajero</span>
       <div class="repolist">
         <a href="https://github.com/abelchiao/genetic-algorithm-visualization" target="_blank" rel="noopener">
-          <b>Visualización del GA en tu navegador</b><span>HTML + JavaScript puro, con el mapa y la curva — ¡como esta presentación!</span></a>
+          <b>Visualización del GA en tu navegador</b><span>HTML + JavaScript puro, con el mapa y la curva, ¡como esta presentación!</span></a>
         <a href="https://github.com/dzhang55/travelling-salesman" target="_blank" rel="noopener">
           <b>Mapa comparando 7 métodos</b><span>Compara el GA con vecino cercano, recocido simulado y más</span></a>
         <a href="https://github.com/hassanzadehmahdi/Traveling-Salesman-Problem-using-Genetic-Algorithm" target="_blank" rel="noopener">
@@ -452,37 +486,36 @@ mejor_ruta, mejor_d = <span class="k">None</span>, <span class="k">None</span>
       </div></div>
     <div class="card o"><span class="tag">En otros lenguajes</span>
       <ul>
-        <li><a href="https://jmetal.org/" target="_blank" rel="noopener"><b>jMetal</b></a> (Java) —
+        <li><a href="https://jmetal.org/" target="_blank" rel="noopener"><b>jMetal</b></a> (Java):
           decenas de algoritmos listos.</li>
-        <li><b>JavaScript a mano</b> — como esta página: con un canvas y ~200 líneas alcanza.</li>
+        <li><b>JavaScript a mano:</b> como esta página, con un canvas y ~200 líneas alcanza.</li>
       </ul>
-      <p class="small" style="margin-top:8px">Consejo: antes de instalar algo, escriba el ejemplo de
+      <p class="small" style="margin-top:1rem">Consejo: antes de instalar algo, escriba el ejemplo de
       arriba a mano. Si entiende esas 50 líneas, entiende el 90% de cualquier librería.</p>
     </div>
   </div>
 </section>
 
-<!-- 14 · Cierre -->
-<section class="slide" data-title="Cierre">
+<!-- 14. Cierre -->
+<section class="slide cierre" data-title="Cierre">
   <span class="kicker">Para llevar a casa</span>
-  <h2><span class="n">13</span> La idea completa en una frase</h2>
+  <h2>La idea completa en una frase</h2>
   <div class="okbox"><p><strong>Creamos muchas opciones, medimos cuáles son mejores, mezclamos lo
-  mejor de dos y cambiamos algo de vez en cuando — y repetimos.</strong> La selección busca lo bueno;
+  mejor de dos y cambiamos algo de vez en cuando, y repetimos.</strong> La selección busca lo bueno;
   la mutación mantiene abierta la puerta a lo nuevo. Todo lo demás son detalles.</p></div>
-  <p class="center" style="font-size:1.35rem;color:#fff;font-weight:700;margin-top:26px">¡Gracias! · ¿Preguntas?</p>
+  <p class="gracias">¡Gracias! ¿Preguntas?</p>
 </section>
 
-<!-- PART2 -->
-
 </main>
-<div id="hint">← → navegar · ↑ ↓ desplazar · ESPACIO siguiente · F pantalla completa · ESC salir</div>
+<div id="hint">← → navegar, ↑ ↓ desplazar, espacio siguiente, F pantalla completa, Esc salir</div>
 <div id="dots"></div>
 <nav id="controls">
-  <button class="navbtn" id="prev" title="Anterior (←)">‹</button>
+  <button class="navbtn" id="prev" title="Anterior (←)" aria-label="Anterior">‹</button>
   <span id="counter">1 / 14</span>
-  <button class="navbtn" id="next" title="Siguiente (→)">›</button>
+  <button class="navbtn" id="next" title="Siguiente (→)" aria-label="Siguiente">›</button>
 </nav>
 <script src="js/navegacion.js"></script>
+<script src="js/animaciones.js"></script>
 <script src="js/ejemplo-palabra.js"></script>
 <script src="js/ejemplo-viajero.js"></script>
 </body>
