@@ -491,7 +491,13 @@
     ejecútelo con <strong>python ruta.py</strong>. Está todo comentado y es exactamente lo que acaba
     de ver: <strong>medir, mezclar, cambiar, repetir</strong>.</p>
   </div>
-  <pre class="code dos"><span class="k">import</span> random, math
+  <div class="codigo">
+    <div class="codigo-barra">
+      <div class="tabs" id="codigo-tabs" aria-label="Partes del código"></div>
+      <button class="btn" id="codigo-copiar">⧉ Copiar código</button>
+    </div>
+    <div class="codigo-vista" id="codigo-vista"></div>
+  <pre class="code dos" id="codigo-completo"><span class="k">import</span> random, math
 
 random.<span class="f">seed</span>(<span class="o">42</span>)
 CIUDADES = [(random.<span class="f">random</span>(), random.<span class="f">random</span>()) <span class="k">for</span> _ <span class="k">in</span> <span class="f">range</span>(<span class="o">20</span>)]
@@ -548,6 +554,7 @@ mejor_ruta, mejor_d = <span class="k">None</span>, <span class="k">None</span>
     poblacion = nueva
 
 <span class="f">print</span>(<span class="s">f"Mejor ruta encontrada en 500 generaciones: {mejor_d:.4f}"</span>)</pre>
+  </div>
 </section>
 
 <!-- 14. Librerías -->
@@ -617,5 +624,6 @@ mejor_ruta, mejor_d = <span class="k">None</span>, <span class="k">None</span>
 <script src="js/ejemplo-palabra.js"></script>
 <script src="js/ejemplo-viajero.js"></script>
 <script src="js/ejemplo-ruta.js"></script>
+<script src="js/codigo.js"></script>
 </body>
 </html>
