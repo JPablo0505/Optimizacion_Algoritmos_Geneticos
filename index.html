@@ -322,13 +322,13 @@
             <button class="btn" id="obj-vercruce">🔍 Ver un cruce en cámara lenta</button>
           </div>
           <label class="sw"><input type="checkbox" id="obj-origen">
-            <span>Ver de dónde viene<br>cada letra</span></label>
+            <span>Ver de qué padre se copió<br>cada letra</span></label>
         </div>
         <div class="leyenda" id="obj-leyenda" hidden>
           <span><i class="lg-ok"></i>letra correcta</span>
-          <span><i class="lg-p1"></i>del padre 1</span>
-          <span><i class="lg-p2"></i>del padre 2</span>
-          <span><i class="lg-mut"></i>mutación</span>
+          <span><i class="lg-p1"></i>copiada del padre 1</span>
+          <span><i class="lg-p2"></i>copiada del padre 2</span>
+          <span><i class="lg-mut"></i>mutó en esta generación</span>
           <span><em class="et-elite">élite</em>pasó intacta</span>
         </div>
         <p id="obj-frase"></p>
@@ -350,7 +350,7 @@
       <h2>El repartidor, evolucionando</h2>
     </div>
     <p class="lead">El repartidor sale de la <strong>Bodega</strong>, visita todos los barrios del Valle de
-    Aburrá y vuelve. La línea verde es la <strong>mejor ruta</strong> encontrada.</p>
+    Aburrá y vuelve. Pulse <strong>Empezar</strong> y observe cómo la población busca la ruta más corta.</p>
   </div>
   <div class="demo">
     <div class="demo-head">
@@ -363,13 +363,18 @@
     </div>
 
     <div class="demo-body viaje">
-      <div class="mapa-wrap mapa-real">
+      <div class="mapa-wrap mapa-real" id="via-mapa">
         <canvas id="plano" width="600" height="701" aria-hidden="true"></canvas>
         <canvas id="ciudades" width="600" height="701"
                 aria-label="Mapa del Valle de Aburrá con los barrios y la mejor ruta"></canvas>
-        <div class="leyenda sobre-mapa" id="via-leyenda">
-          <span><i class="lg-verde"></i>Verde: mejor ruta</span>
-          <span><i class="lg-gris"></i>Gris: otras rutas de la población</span>
+        <div class="leyenda sobre-mapa" id="via-leyenda" hidden>
+          <span id="via-ley-cand"><i class="lg-cand"></i>Mejor ruta hasta ahora</span>
+          <span id="via-ley-final" hidden><i class="lg-verde"></i>Ruta final (el algoritmo se detuvo)</span>
+          <span id="via-ley-pob"><i class="lg-pob"></i>Otras rutas de la población</span>
+        </div>
+        <div class="solo-ampliado mapa-info">
+          <button class="btn primary" id="via-play2">▶ Empezar</button>
+          <span id="via-info"></span>
         </div>
       </div>
       <div class="graf-lado">
@@ -408,9 +413,9 @@
         <div class="curva-lado">
           <div class="leyenda curva-ley">
             <b>Distancia por generación:</b>
-            <span><i class="lg-verde"></i>mejor</span>
+            <span><i class="lg-cand" id="via-curva-mejor"></i>mejor</span>
             <span><i class="lg-prom"></i>promedio</span>
-            <span><i class="lg-record"></i>récord</span>
+            <span><i class="lg-record" id="via-curva-record"></i>récord</span>
             <span><i class="lg-estanca"></i>estancado</span>
           </div>
           <canvas id="curva" width="700" height="125"></canvas>
@@ -445,10 +450,14 @@
       <button class="btn primary" id="ruta-volver">← Ir al ejemplo del repartidor</button>
     </div>
     <div class="ruta-contenido" id="ruta-contenido">
-      <div class="mapa-wrap mapa-real ruta-mapa">
+      <div class="mapa-wrap mapa-real ruta-mapa" id="ruta-mapa-wrap">
         <canvas id="ruta-fondo" width="600" height="701" aria-hidden="true"></canvas>
         <canvas id="ruta-moto" width="600" height="701"
                 aria-label="La moto de reparto recorre la ruta ganadora por las calles"></canvas>
+        <div class="solo-ampliado mapa-info">
+          <button class="btn primary" id="ruta-play2">▶ Recorrer la ruta ganadora</button>
+          <span id="ruta-info"></span>
+        </div>
       </div>
       <div class="ruta-lado">
         <div class="galeria" id="ruta-galeria" aria-label="La mejor ruta en distintos momentos"></div>

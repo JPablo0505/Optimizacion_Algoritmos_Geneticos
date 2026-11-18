@@ -17,6 +17,11 @@
    · trazarCamino(g, a, b, primero)  agrega al trazo el camino a→b
    · camino(a, b)      puntos [x0, y0, x1, y1, …] del camino a→b
    · dibujarFondo(g)   vías y río (se dibuja una vez en un canvas de fondo)
+   · COLOR             colores de las rutas (alto contraste sobre las vías):
+                       candidata = mejor ruta HASTA AHORA (aún puede mejorar),
+                       final = ruta final (el algoritmo se detuvo), poblacion
+   · prepararCanvas(c, w, h)  resolución según el tamaño real en pantalla
+   · ampliable(wrap, alCambiar)  botón "⛶ Ampliar": el mapa a casi toda la pantalla
    · pines / ubicarEtiquetas / etiquetas / tamEtiqueta / redondeado
    ========================================================= */
 (function () {
@@ -72,6 +77,64 @@
     }
   }
 
+  /* colores de las rutas: con buen contraste sobre el fondo claro de las vías */
+  var COLOR = {
+    candidata: "#c2185b",                            // fucsia: la mejor HASTA AHORA (aún puede mejorar)
+    final: "#026937",                                // verde UdeA: la ruta final, cuando el algoritmo se detiene
+    poblacion: "rgba(30,42,110,.45)"                 // azul marino tenue: el resto de la población
+  };
+
+  /* canvas nítido: la resolución interna sigue al tamaño con que se ve en pantalla */
+  function prepararCanvas(c, w, h) {
+    var r = c.getBoundingClientRect();
+    var k = (window.devicePixelRatio || 1) * Math.max(1, r.width ? r.width / w : 1);
+    c.width = Math.round(w * k);
+    c.height = Math.round(h * k);
+    var g = c.getContext("2d");
+    g.setTransform(k, 0, 0, k, 0, 0);
+    return g;
+  }
+
+  /* botón "⛶ Ampliar": pone el mapa a casi toda la pantalla sobre un velo oscuro.
+     Se cierra con el mismo botón, con Esc o con un clic en el velo.
+     alCambiar(abierto) se llama después de cada cambio (para redibujar nítido). */
+  function ampliable(wrap, alCambiar) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn-ampliar";
+    btn.textContent = "⛶ Ampliar";
+    btn.title = "Ver el mapa en grande (Esc para volver)";
+    wrap.appendChild(btn);
+    var velo = null;
+    function poner(v) {
+      if (v === wrap.classList.contains("ampliado")) return;
+      wrap.classList.toggle("ampliado", v);
+      btn.textContent = v ? "✕ Cerrar" : "⛶ Ampliar";
+      if (v) {
+        velo = document.createElement("div");
+        velo.className = "mapa-velo";
+        velo.addEventListener("click", function () { poner(false); });
+        document.body.appendChild(velo);
+      } else if (velo) {
+        velo.parentNode.removeChild(velo);
+        velo = null;
+      }
+      alCambiar(v);
+    }
+    btn.addEventListener("click", function (e) {
+      e.stopPropagation();
+      btn.blur();
+      poner(!wrap.classList.contains("ampliado"));
+    });
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && wrap.classList.contains("ampliado")) poner(false);
+    });
+    return {
+      cerrar: function () { poner(false); },
+      abierto: function () { return wrap.classList.contains("ampliado"); }
+    };
+  }
+
   /* ---------- fondo: vías reales y río ---------- */
   function lineas(g, lista) {
     g.beginPath();
@@ -89,11 +152,11 @@
     g.lineCap = "round";
     g.lineJoin = "round";
     lineas(g, D.rio);                                // el río Medellín
-    g.strokeStyle = "#b9d6ea"; g.lineWidth = 4.5; g.stroke();
+    g.strokeStyle = "#c6dff0"; g.lineWidth = 4.5; g.stroke();
     lineas(g, D.vias.secundarias);                   // secundarias y terciarias
-    g.strokeStyle = "#dcd6c8"; g.lineWidth = 1.3; g.stroke();
+    g.strokeStyle = "#e2ded3"; g.lineWidth = 1.3; g.stroke();
     lineas(g, D.vias.principales);                   // autopistas, troncales y primarias
-    g.strokeStyle = "#e9d398"; g.lineWidth = 2.6; g.stroke();
+    g.strokeStyle = "#ecdfb8"; g.lineWidth = 2.6; g.stroke();
     g.restore();
   }
 
@@ -231,6 +294,9 @@
     W: W, H: H,
     pool: pool,
     fuente: D.fuente,
+    COLOR: COLOR,
+    prepararCanvas: prepararCanvas,
+    ampliable: ampliable,
     distancia: distancia,
     camino: camino,
     trazarCamino: trazarCamino,

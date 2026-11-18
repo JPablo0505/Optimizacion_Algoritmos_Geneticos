@@ -14,10 +14,15 @@
    La distancia entre dos barrios es la distancia POR CALLE por las
    vías principales (sin sentidos viales), en km reales, y cada
    tramo de una ruta se dibuja siguiendo esas calles.
-   Detrás de la mejor ruta (verde) se dibujan 24 rutas de la
-   población en gris tenue: al principio van en todas direcciones
-   y, con las generaciones, se parecen cada vez más a la verde
-   (la población converge). Interruptor "Mostrar la población".
+   Antes de pulsar "Empezar" solo se ven los barrios: todavía no hay
+   rutas. Al correr, la mejor ruta HASTA AHORA se dibuja en fucsia
+   (aún puede mejorar) y, detrás, 24 rutas de la población en azul
+   marino tenue: al principio van en todas direcciones y, con las
+   generaciones, se parecen cada vez más a la mejor (la población
+   converge). Solo cuando el algoritmo se detiene (200 generaciones
+   sin mejorar) la ruta se pinta de verde: es la ruta FINAL. Un
+   algoritmo genético no garantiza la óptima: es la mejor que encontró.
+   "⛶ Ampliar" muestra el mapa a casi toda la pantalla.
    NO arranca solo: hay que presionar "Empezar".
 
    Instantáneas para la slide 12 ("Así evolucionó la ruta"):
@@ -77,6 +82,7 @@
 
   var cursor = null;              // índice del barrio bajo el cursor (muestra su nombre)
   var verPob = true;              // interruptor "Mostrar la población"
+  var firmaLeyenda = "";          // estado de la leyenda la última vez que se ubicaron los nombres
 
   /* ---------- referencias ---------- */
   var elPlano = document.getElementById("plano");
@@ -96,6 +102,13 @@
   var elMejora = document.getElementById("via-mejora");
   var elEstado = document.getElementById("via-estado");
   var elVerPob = document.getElementById("via-verpob");
+  var elLeyenda = document.getElementById("via-leyenda");
+  var elLeyCand = document.getElementById("via-ley-cand");
+  var elLeyFinal = document.getElementById("via-ley-final");
+  var elLeyPob = document.getElementById("via-ley-pob");
+  var elCurvaMejor = document.getElementById("via-curva-mejor");
+  var elInfo = document.getElementById("via-info");
+  var elPlay2 = document.getElementById("via-play2");
   var ciclo = window.Ciclo.crear(document.getElementById("via-ciclo"));
 
   /* ---------- canvas con nitidez (retina) ---------- */
@@ -107,8 +120,8 @@
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     return g;
   }
-  var pctx = prepararCanvas(elPlano, W, H);
-  var ctx = prepararCanvas(elMapa, W, H);
+  var pctx = M.prepararCanvas(elPlano, W, H);
+  var ctx = M.prepararCanvas(elMapa, W, H);
   var cctx = prepararCanvas(elCurva, CW, CH);
 
   function ri(n) { return Math.floor(Math.random() * n); }
@@ -117,6 +130,9 @@
   function corriendo() {
     return arrancado && !pausado && !estancado;
   }
+
+  /* fucsia mientras puede mejorar; verde cuando el algoritmo se detuvo */
+  function colorMejor() { return estancado ? M.COLOR.final : M.COLOR.candidata; }
 
   /* ---------- barrios reales y distancias por calle ---------- */
   function nuevaCiudad(p) {
@@ -162,7 +178,8 @@
   function zonaLeyenda() {
     var ley = document.getElementById("via-leyenda");
     var m = elMapa.getBoundingClientRect(), l = ley.getBoundingClientRect();
-    if (ley.hidden || !m.width) return [{ x: 0, y: 0, w: 560, h: 34 }];   // aún sin medidas: un margen amplio
+    if (ley.hidden) return [];                                          // sin leyenda: todo el mapa libre
+    if (!m.width) return [{ x: 0, y: 0, w: 330, h: 80 }];              // aún sin medidas: un margen amplio
     var e = W / m.width;
     return [{ x: (l.left - m.left) * e - 4, y: (l.top - m.top) * e - 4, w: l.width * e + 8, h: l.height * e + 8 }];
   }
@@ -342,8 +359,21 @@
   }
 
   function actualizarEstado() {
+    // leyenda del mapa: qué significa cada color en este momento
+    elLeyenda.hidden = !arrancado;
+    elLeyCand.hidden = estancado;
+    elLeyFinal.hidden = !estancado;
+    elLeyPob.hidden = !verPob;
+    elCurvaMejor.classList.toggle("final", estancado);
+    document.getElementById("via-curva-record").classList.toggle("final", estancado);
+    elInfo.textContent = "Generación " + generacion + " · " +
+      (estancado ? "ruta final: " : "mejor hasta ahora: ") + (mejorD === Infinity ? "-" : km(mejorD));
+    // si la leyenda cambió de tamaño, los nombres se reubican para no quedar tapados
+    var firma = elLeyenda.hidden + "|" + estancado + "|" + verPob;
+    if (firma !== firmaLeyenda) { firmaLeyenda = firma; reubicarEtiquetas(); }
     ciclo.modo(corriendo() ? "continuo" : "quieto");   // panel del ciclo: ¿está girando?
     elPlay.textContent = textoBoton();
+    elPlay2.textContent = elPlay.textContent;          // el mismo botón dentro del mapa ampliado
     elEstado.textContent = textoEstado();
   }
 
@@ -368,24 +398,25 @@
       if (!r || r.length !== ciudades.length) continue;   // ruta de un mapa anterior
       trazarRuta(ctx, r);
     }
-    ctx.strokeStyle = "rgba(70,86,78,.22)";
-    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = M.COLOR.poblacion;
+    ctx.lineWidth = 1.7;
     ctx.lineJoin = "round";
     ctx.stroke();
   }
 
   function dibujarRuta() {
     ctx.clearRect(0, 0, W, H);
-    if (verPob) dibujarPoblacion();
-    if (mejorRuta.length && ciudades.length) {
+    // antes de "Empezar" solo se ven los barrios: aún no hay rutas
+    if (arrancado && verPob) dibujarPoblacion();
+    if (arrancado && mejorRuta.length && ciudades.length) {
       ctx.beginPath();
       trazarRuta(ctx, mejorRuta);
       ctx.strokeStyle = "rgba(255,255,255,.9)";        // borde blanco: se lee sobre el plano
       ctx.lineWidth = 6.5;
       ctx.lineJoin = "round";
       ctx.stroke();
-      ctx.strokeStyle = "#026937";
-      ctx.lineWidth = 3.4;
+      ctx.strokeStyle = colorMejor();
+      ctx.lineWidth = 3.6;
       ctx.stroke();
     }
     M.pines(ctx, ciudades, {});
@@ -454,12 +485,12 @@
     cctx.beginPath();
     cctx.moveTo(X(0), Y(historial[0]));
     for (i = 1; i < n; i++) cctx.lineTo(X(i), Y(historial[i]));
-    cctx.strokeStyle = "#026937";
+    cctx.strokeStyle = colorMejor();
     cctx.lineWidth = 2.8;
     cctx.stroke();
 
     // un punto por cada nuevo récord
-    cctx.fillStyle = "#43b649";
+    cctx.fillStyle = colorMejor();
     cctx.strokeStyle = "#fff";
     cctx.lineWidth = 1.5;
     for (i = 0; i < recordsGen.length; i++) {
@@ -477,19 +508,20 @@
     cctx.fillText(km(mx), izq - 6, arr + 12);
     cctx.fillText(km(mn), izq - 6, CH - aba);
     cctx.textAlign = "left";
-    cctx.fillStyle = "#026937";
+    cctx.fillStyle = colorMejor();
     cctx.font = "700 16px 'Plus Jakarta Sans', 'Segoe UI', sans-serif";
     var ult = historial[n - 1];
-    cctx.fillText("mejor: " + km(ult), Math.min(X(n - 1) + 6, CW - 140), Math.max(Y(ult) - 8, 30));
+    cctx.fillText((estancado ? "final: " : "mejor: ") + km(ult), Math.min(X(n - 1) + 6, CW - 140), Math.max(Y(ult) - 8, 30));
   }
 
   function pintar() {
     dibujarRuta();
     dibujarCurva();
     elGen.textContent = generacion;
-    elMejor.textContent = mejorD === Infinity ? "-" : km(mejorD);
-    elInicial.textContent = inicialD == null ? "-" : km(inicialD);
-    elMejora.textContent = (inicialD && mejorD < Infinity)
+    // antes de "Empezar" aún no hay rutas: no se muestran distancias
+    elMejor.textContent = !arrancado || mejorD === Infinity ? "-" : km(mejorD);
+    elInicial.textContent = !arrancado || inicialD == null ? "-" : km(inicialD);
+    elMejora.textContent = (arrancado && inicialD && mejorD < Infinity)
       ? ((inicialD - mejorD) / inicialD * 100).toFixed(0) + "%" : "-";
     actualizarEstado();
   }
@@ -535,7 +567,7 @@
   elVel.addEventListener("change", function () { if (reloj) correr(); });
   elVerPob.addEventListener("change", function () {
     verPob = this.checked;
-    document.getElementById("via-leyenda").hidden = !verPob;   // sin grises, la leyenda sobra
+    actualizarEstado();
     etiquetas = M.ubicarEtiquetas(ctx, ciudades, W, H, zonaLeyenda(), M.tamEtiqueta(elMapa, W));
     dibujarRuta();
   });
@@ -618,6 +650,17 @@
     if (!reloj && corriendo()) correr();
   });
 
+  elPlay2.addEventListener("click", function () { this.blur(); elPlay.click(); });
+
+  /* ---------- ampliar el mapa ---------- */
+  var ampliar = M.ampliable(document.getElementById("via-mapa"), function () {
+    // otro tamaño en pantalla: se rehacen los canvas con la resolución justa
+    pctx = M.prepararCanvas(elPlano, W, H);
+    ctx = M.prepararCanvas(elMapa, W, H);
+    M.dibujarFondo(pctx);
+    reubicarEtiquetas();
+  });
+
   /* ---------- datos de la corrida para la slide 12 ---------- */
   window.Repartidor = {
     W: W, H: H,
@@ -626,6 +669,7 @@
     estado: function () {
       return {
         arrancado: arrancado,
+        final: estancado,                             // ¿el algoritmo ya se detuvo?
         ciudades: ciudades,
         fotos: fotos,
         genBase: genBase,
@@ -644,7 +688,7 @@
       if (corriendo()) correr();
       actualizarEstado();
     },
-    stop: function () { visible = false; pararReloj(); }
+    stop: function () { visible = false; pararReloj(); ampliar.cerrar(); }
   });
 
   function reubicarEtiquetas() {

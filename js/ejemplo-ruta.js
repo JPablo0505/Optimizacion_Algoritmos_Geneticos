@@ -10,6 +10,10 @@
      barrio, y vuelve; los barrios se marcan como visitados
    · línea de tiempo: un slider sobre las instantáneas guardadas
      para "rebobinar" la evolución
+   Colores: la ganadora va en verde solo si el algoritmo ya se
+   detuvo (ruta FINAL); si la corrida sigue abierta, va en fucsia
+   ("mejor hasta ahora"), igual que las rutas intermedias.
+   "⛶ Ampliar" muestra el mapa grande a casi toda la pantalla.
    Si no hubo corrida, muestra un aviso con un botón para volver.
    Se registra con Presentacion.registrar: start() lee los datos
    y dibuja; stop() detiene la animación de la moto.
@@ -44,8 +48,11 @@
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     return g;
   }
-  var fctx = prepararCanvas(elFondo, W, H);
-  var mctx = prepararCanvas(elMoto, W, H);
+  var M = window.Mapa;
+  var fctx = M.prepararCanvas(elFondo, W, H);
+  var mctx = M.prepararCanvas(elMoto, W, H);
+  var elPlay2 = document.getElementById("ruta-play2");
+  var elInfo = document.getElementById("ruta-info");
 
   var datos = null;               // copia de lo que expone el repartidor al entrar
   var etiquetas = [];
@@ -84,7 +91,10 @@
   }
 
   /* ---------- dibujo compartido ---------- */
-  function dibujarRuta(g, ciudades, ruta, ancho) {
+  /* color de una instantánea: verde solo la ganadora de una corrida terminada */
+  function colorFoto(i) { return i === datos.gana && datos.final ? M.COLOR.final : M.COLOR.candidata; }
+
+  function dibujarRuta(g, ciudades, ruta, ancho, color) {
     if (!ruta || !ruta.length) return;
     g.beginPath();
     for (var i = 0; i < ruta.length; i++) {        // cada tramo sigue las calles reales
@@ -95,7 +105,7 @@
     g.strokeStyle = "rgba(255,255,255,.9)";
     g.lineWidth = ancho + 3;
     g.stroke();
-    g.strokeStyle = "#026937";
+    g.strokeStyle = color;
     g.lineWidth = ancho;
     g.stroke();
   }
@@ -110,19 +120,19 @@
     idx.forEach(function (i) {
       var f = fotos[i], esGana = i === gana;
       var card = document.createElement("button");
-      card.className = "foto" + (esGana ? " ganadora" : "") + (i === actual ? " sel" : "");
+      card.className = "foto" + (esGana ? " ganadora" + (datos.final ? " final" : "") : "") + (i === actual ? " sel" : "");
       card.dataset.i = i;
       var c = document.createElement("canvas");
       var esc = esGana ? 0.42 : 0.32;                // la ganadora se ve más grande
       var g = prepararCanvas(c, W * esc, H * esc);
       g.drawImage(R.fondo, 0, 0, W * esc, H * esc);
       g.scale(esc, esc);
-      dibujarRuta(g, datos.ciudades, f.ruta, esGana ? 5 : 6);
+      dibujarRuta(g, datos.ciudades, f.ruta, esGana ? 5 : 6, colorFoto(i));
       window.Mapa.pines(g, datos.ciudades, {});
       card.appendChild(c);
       var pie = document.createElement("span");
       pie.className = "foto-pie";
-      pie.innerHTML = (esGana ? '<em class="foto-tag">Ruta más eficiente</em>' : "") +
+      pie.innerHTML = (esGana ? '<em class="foto-tag">' + (datos.final ? "Ruta final" : "Mejor hasta ahora") + "</em>" : "") +
         "<b>Gen " + genRel(f) + "</b> · " + R.km(f.d) +
         (i === 0 ? " · al azar" : " · −" + pct(d0, f.d) + " %");
       card.appendChild(pie);
@@ -145,12 +155,13 @@
     var f = datos.fotos[i], d0 = datos.fotos[0].d;
     fctx.clearRect(0, 0, W, H);
     fctx.drawImage(R.fondo, 0, 0, W, H);
-    dibujarRuta(fctx, datos.ciudades, f.ruta, 3.6);
+    dibujarRuta(fctx, datos.ciudades, f.ruta, 3.6, colorFoto(i));
     recorrido = prepararRecorrido(f.ruta);
     dibujarMoto(0);
     elTiempoTxt.innerHTML = "<b>Gen " + genRel(f) + "</b> · " + R.km(f.d) +
       (i === 0 ? " · la mejor de la población al azar" : " · " + pct(d0, f.d) + " % más corta que en la generación 0") +
-      (i === datos.gana ? " · <b>la ganadora</b>" : "");
+      (i === datos.gana ? (datos.final ? " · <b>la ruta final</b>" : " · <b>la mejor hasta ahora</b> (la corrida no ha terminado)") : "");
+    elInfo.textContent = "Gen " + genRel(f) + " · " + R.km(f.d);
     Array.prototype.forEach.call(elGaleria.children, function (c) {
       c.classList.toggle("sel", +c.dataset.i === i);
     });
@@ -225,7 +236,7 @@
 
   function pararMoto() {
     if (anim) { cancelAnimationFrame(anim); anim = null; }
-    elPlay.textContent = "▶ Recorrer la ruta ganadora";
+    elPlay.textContent = elPlay2.textContent = "▶ Recorrer la ruta ganadora";
   }
 
   function cuadro(ahora) {
@@ -235,7 +246,7 @@
     elRecorrido.textContent = t < 1 ? "Visitados: " + n + " de " + total + " barrios"
       : "¡Ruta completa! Visitó los " + total + " barrios y volvió a la Bodega.";
     if (t < 1) anim = requestAnimationFrame(cuadro);
-    else { anim = null; elPlay.textContent = "▶ Recorrer la ruta ganadora"; }
+    else { anim = null; elPlay.textContent = elPlay2.textContent = "▶ Recorrer la ruta ganadora"; }
   }
 
   function recorrer() {
@@ -243,7 +254,7 @@
     if (actual !== gana) mostrar(gana);               // la moto siempre hace la ruta ganadora
     pararMoto();
     t0 = performance.now();
-    elPlay.textContent = "⏸ Recorriendo…";
+    elPlay.textContent = elPlay2.textContent = "⏸ Recorriendo…";
     anim = requestAnimationFrame(cuadro);
   }
 
@@ -278,7 +289,8 @@
     datos = {
       ciudades: e.ciudades.map(function (c) { return { p: c.p, x: c.x, y: c.y, nombre: c.nombre, bodega: c.bodega }; }),
       fotos: e.fotos.slice(),
-      genBase: e.genBase
+      genBase: e.genBase,
+      final: e.final                                  // ¿la corrida ya terminó?
     };
     datos.gana = indiceGanadora(datos.fotos);
     var f0 = datos.fotos[0], fN = datos.fotos[datos.gana];
@@ -305,8 +317,30 @@
     dibujarMoto(0);
   }
 
+  elPlay2.addEventListener("click", function () { this.blur(); elPlay.click(); });
+
+  /* ---------- ampliar el mapa grande ---------- */
+  var ampliar = M.ampliable(document.getElementById("ruta-mapa-wrap"), function () {
+    rehacerCanvas();
+    if (datos) {
+      var corria = !!anim, inicio = t0;               // si la moto iba andando, sigue donde iba
+      etiquetas = M.ubicarEtiquetas(mctx, datos.ciudades, W, H, null, M.tamEtiqueta(elMoto, W));
+      mostrar(actual);
+      if (corria) {
+        t0 = inicio;
+        elPlay.textContent = elPlay2.textContent = "⏸ Recorriendo…";
+        anim = requestAnimationFrame(cuadro);
+      }
+    }
+  });
+
+  function rehacerCanvas() {
+    fctx = M.prepararCanvas(elFondo, W, H);
+    mctx = M.prepararCanvas(elMoto, W, H);
+  }
+
   window.Presentacion.registrar("slide-demo-ruta", {
-    start: function () { preparar(); },
-    stop: function () { pararMoto(); }
+    start: function () { rehacerCanvas(); preparar(); },
+    stop: function () { pararMoto(); ampliar.cerrar(); }
   });
 })();
