@@ -278,19 +278,21 @@
       <div class="demo-side">
         <div class="ctrls vert">
           <div class="ctl">
-            <label for="obj-palabra">Palabra objetivo</label>
-            <input type="text" id="obj-palabra" value="GENETICA" maxlength="10"
+            <label for="obj-palabra">Palabra o frase objetivo <small>(hasta 20)</small></label>
+            <input type="text" id="obj-palabra" value="GENETICA" maxlength="20"
                    autocomplete="off" spellcheck="false">
           </div>
           <div class="ctl">
             <label for="obj-pob">Tamaño de la población</label>
-            <div class="rowval"><input type="range" id="obj-pob" min="10" max="80" step="5" value="40">
+            <div class="rowval"><input type="range" id="obj-pob" min="10" max="150" step="5" value="40">
               <output id="val-pob">40</output></div>
           </div>
           <div class="ctl">
-            <label for="obj-mut">Mutación</label>
-            <div class="rowval"><input type="range" id="obj-mut" min="0" max="10" step="1" value="3">
-              <output id="val-mut">3%</output></div>
+            <label for="obj-mut">Mutación <small>(por letra)</small></label>
+            <div class="rowval"><input type="range" id="obj-mut" min="0" max="15" step="0.5" value="12.5">
+              <output id="val-mut">12,5%</output></div>
+            <label class="sw"><input type="checkbox" id="obj-mutauto" checked>
+              <span>Mutación automática <small>(≈ 1 letra por palabra)</small></span></label>
           </div>
           <div class="ctl">
             <label for="obj-vel">Velocidad</label>

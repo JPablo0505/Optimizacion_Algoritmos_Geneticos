@@ -371,17 +371,44 @@ canvas{
 .demo-main .hint{margin-top:0}
 .hint b{color:var(--green-d)}
 
-/* filas del ejemplo de palabras */
-.srow{
-  display:grid;grid-template-columns:minmax(11rem,1fr) minmax(7rem,1.7fr) 2rem;
-  gap:1.1rem;align-items:center;padding:.3rem 0;
-  font-family:var(--mono);font-size:1.5rem;
+/* interruptor (checkbox con estilo de "switch") */
+.sw{display:flex;align-items:center;gap:.6rem;cursor:pointer;font-size:1rem;color:var(--muted);font-weight:600;line-height:1.3}
+.sw input{
+  appearance:none;-webkit-appearance:none;flex:0 0 auto;width:2.4rem;height:1.35rem;border-radius:999px;
+  background:#c9d6cc;position:relative;cursor:pointer;transition:background .2s;margin:0;
 }
-.srow .str{letter-spacing:.2em;color:#8aa093;white-space:nowrap;overflow:hidden}
-.srow .str .ok{color:var(--green-d);font-weight:800}
+.sw input::after{
+  content:"";position:absolute;top:.17rem;left:.17rem;width:1rem;height:1rem;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s var(--ease);
+}
+.sw input:checked{background:var(--green-d)}
+.sw input:checked::after{transform:translateX(1.05rem)}
+.sw input:focus-visible{outline:.2rem solid var(--teal-l);outline-offset:.15rem}
+.ctl small,.sw small{font-weight:500;color:var(--soft)}
+
+/* filas del ejemplo de palabras: una ficha por letra; se achican con el largo */
+#obj-filas{--n:8;--ficha:1.45rem}
+#obj-filas[data-largo="m"]{--ficha:1.15rem}
+#obj-filas[data-largo="l"]{--ficha:.95rem}
+.srow{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(4rem,9rem) 2.2rem;
+  gap:1rem;align-items:center;padding:.22rem 0;
+  font-family:var(--mono);
+}
+.srow .str{
+  display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));gap:.18rem;
+  max-width:calc(var(--n) * var(--ficha) * 1.6);
+}
+.srow .str > span{
+  position:relative;display:grid;place-items:center;height:calc(var(--ficha) * 1.75);
+  font-size:var(--ficha);font-weight:600;color:#7f978a;
+  background:#f1f5f2;border-radius:.4rem;line-height:1;
+}
+.srow .str > span.esp{color:#b7c6bc}
+.srow .str .ok{color:#fff;background:var(--c-ok);font-weight:800}
 .bar{height:.7rem;background:#e3ece5;border-radius:1rem;overflow:hidden}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--lime));border-radius:1rem;transition:width .35s var(--ease)}
-.srow .f{color:var(--amber);font-weight:800;text-align:right;font-size:1.3rem}
+.srow .f{color:var(--amber);font-weight:800;text-align:right;font-size:1.3rem;font-variant-numeric:tabular-nums}
 
 /* ---------- panel del ciclo (js/ciclo.js) ---------- */
 .ciclo{display:flex;flex-direction:column;align-items:center;gap:.35rem;min-width:0}

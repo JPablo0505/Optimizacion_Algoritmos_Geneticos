@@ -1,23 +1,30 @@
 /* =========================================================
    ejemplo-palabra.js — Ejemplo 1: la población quiere
-   formar tu palabra. Todo es editable en vivo:
-   palabra objetivo, tamaño, mutación y velocidad.
-   NO arranca solo: hay que presionar "Empezar".
+   formar su palabra (o frase corta, hasta 20 símbolos).
+   Todo es editable en vivo: objetivo, tamaño, mutación y
+   velocidad. NO arranca solo: hay que presionar "Empezar".
+   Alfabeto: 27 letras + el espacio = 28 símbolos. La entrada
+   se normaliza (mayúsculas, sin tildes, conserva la Ñ).
+   Mutación automática: 1 / largo (≈ 1 letra cambiada por hijo).
    Condiciones de parada (como en todo algoritmo genético):
-   · encontró la palabra        → se detiene y lo avisa
-   · 150 generaciones sin mejora → se detiene (estancado)
-   · pausa manual                → el usuario lo para
+   · encontró la palabra                 → se detiene y lo avisa
+   · max(150, 15 × largo) gen. sin mejora → se detiene (estancado)
+   · pausa manual                         → el usuario lo para
    ========================================================= */
 (function () {
   "use strict";
 
-  var ALFABETO = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
-  var LIMITE_SIN_MEJORA = 150;    // generaciones sin mejorar antes de detenerse
+  var ALFABETO = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ ";   // 28 símbolos (el último es el espacio)
+  var LARGO_MAX = 20;
+
+  // generaciones sin mejorar antes de detenerse: crece con el largo
+  function limiteSinMejora() { return Math.max(150, 15 * objetivo.length); }
 
   var objetivo = "GENETICA";
   var poblacion = [];
   var generacion = 0;
-  var mutacion = 0.03;            // 3% por defecto
+  var mutacion = 1 / 8;          // automática: 1 / largo (12,5 % con GENETICA)
+  var mutAuto = true;             // el interruptor "Mutación automática"
 
   // máquina de estados
   var arrancado = false;          // el usuario presionó Empezar
@@ -37,6 +44,7 @@
   var elVel = document.getElementById("obj-vel");
   var elValPob = document.getElementById("val-pob");
   var elValMut = document.getElementById("val-mut");
+  var elMutAuto = document.getElementById("obj-mutauto");
   var elPlay = document.getElementById("obj-play");
   var elGen = document.getElementById("obj-gen");
   var elMejor = document.getElementById("obj-mejor");
@@ -74,6 +82,32 @@
       if (puntajes[otro] > puntajes[gane]) gane = otro;
     }
     return gane;
+  }
+
+  /* mayúsculas, sin tildes (Á→A, Ü→U), conserva la Ñ, solo letras y espacios */
+  function normalizar(txt) {
+    return txt.toUpperCase()
+      .replace(/Ñ/g, "")                       // proteger la Ñ de la limpieza de tildes
+      .normalize("NFD").replace(/[̀-ͯ]/g, "")
+      .replace(//g, "Ñ")
+      .replace(/[^A-ZÑ ]/g, "")
+      .replace(/ {2,}/g, " ")
+      .replace(/^ +/, "")
+      .slice(0, LARGO_MAX);
+  }
+
+  function mostrarMutacion() {
+    var pct = Math.round(mutacion * 1000) / 10;      // una cifra decimal: 12,5
+    elMut.value = pct;
+    elValMut.textContent = String(pct).replace(".", ",") + "%";
+    elMutAuto.checked = mutAuto;
+  }
+
+  /* con la mutación automática, la tasa sigue al largo del objetivo */
+  function ajustarMutacionAuto() {
+    if (!mutAuto) return;
+    mutacion = Math.min(0.15, 1 / objetivo.length);
+    mostrarMutacion();
   }
 
   function corriendo() {
@@ -115,7 +149,7 @@
     if (mejor > mejorAnt) { mejorAnt = mejor; ultimaMejora = generacion; }
     if (mejor >= objetivo.length) {
       ganado = true;                                   // encontró la palabra
-    } else if (generacion - ultimaMejora >= LIMITE_SIN_MEJORA) {
+    } else if (generacion - ultimaMejora >= limiteSinMejora()) {
       estancado = true;                                // dejó de mejorar
     }
     if (ganado || estancado) pararReloj();
@@ -160,12 +194,15 @@
     for (var n = 0; n < Math.min(8, orden.length); n++) {
       var p = poblacion[orden[n]], f = puntos[orden[n]], celdas = "";
       for (var c = 0; c < p.length; c++) {
-        celdas += '<span class="' + (p[c] === objetivo[c] ? "ok" : "") + '">' + p[c] + "</span>";
+        celdas += '<span class="' + (p[c] === objetivo[c] ? "ok" : "") +
+          (p[c] === " " ? " esp" : "") + '">' + (p[c] === " " ? "␣" : p[c]) + "</span>";
       }
       html += '<div class="srow"><div class="str">' + celdas + "</div>" +
         '<div class="bar"><i style="width:' + (f / objetivo.length * 100) + '%"></i></div>' +
         '<div class="f">' + f + "</div></div>";
     }
+    elFilas.style.setProperty("--n", objetivo.length);   // las fichas se achican con el largo
+    elFilas.dataset.largo = objetivo.length > 14 ? "l" : objetivo.length > 10 ? "m" : "s";
     elFilas.innerHTML = html;
     actualizarEstado();
   }
@@ -199,11 +236,15 @@
   }
 
   elPalabra.addEventListener("input", function () {
-    var limpio = this.value.toUpperCase().replace(/[^A-ZÑ]/g, "").slice(0, 10);
-    if (!limpio) { this.value = objetivo; return; }   // no se permite vacío
-    if (limpio !== this.value) this.value = limpio;
+    var limpio = normalizar(this.value);
+    if (limpio !== this.value) this.value = limpio;   // el campo conserva el espacio que se está escribiendo
+    limpio = limpio.trim();                           // pero el objetivo no termina en espacio
+    if (!limpio) return;                              // vacío: se conserva el objetivo anterior
     if (limpio !== objetivo) {
+      var largoCambio = limpio.length !== objetivo.length;
       objetivo = limpio;
+      if (largoCambio) ajustarLargo();
+      ajustarMutacionAuto();
       // la meta cambió: se limpian las condiciones de parada
       ganado = false; estancado = false;
       mejorAnt = 0; ultimaMejora = generacion;
@@ -213,20 +254,26 @@
   });
   // al salir del campo: si quedó corta, la completamos con el valor válido
   elPalabra.addEventListener("change", function () {
-    if (this.value.toUpperCase().replace(/[^A-ZÑ]/g, "") !== objetivo) this.value = objetivo;
+    if (normalizar(this.value).trim() !== objetivo) this.value = objetivo;
   });
 
   elPob.addEventListener("input", function () { redimensionar(); });
 
   elMut.addEventListener("input", function () {
+    mutAuto = false;                                  // el usuario manda: se apaga lo automático
     mutacion = +this.value / 100;
-    elValMut.textContent = this.value + "%";
+    mostrarMutacion();
     // subir la mutación es la salida típica de un estancamiento
     if (estancado) {
       estancado = false; ultimaMejora = generacion;
       pintar();
       correr();
     }
+  });
+
+  elMutAuto.addEventListener("change", function () {
+    mutAuto = this.checked;
+    if (mutAuto) ajustarMutacionAuto();
   });
 
   elVel.addEventListener("change", function () { if (temporizador) correr(); });
@@ -254,6 +301,16 @@
     if (corriendo() && visible) correr();
   });
 
+  /* el objetivo cambió de largo: cada palabra se recorta o se completa al azar */
+  function ajustarLargo() {
+    var L = objetivo.length;
+    poblacion = poblacion.map(function (p) {
+      if (p.length > L) return p.slice(0, L);
+      while (p.length < L) p += ALFABETO[Math.floor(Math.random() * ALFABETO.length)];
+      return p;
+    });
+  }
+
   function reiniciar() {
     pararReloj();
     poblacion = [];
@@ -268,7 +325,7 @@
   window.Presentacion.registrar("slide-demo-palabra", {
     start: function () {
       visible = true;
-      if (!poblacion.length) reiniciar();             // estado inicial, sin correr
+      if (!poblacion.length) { mostrarMutacion(); reiniciar(); }   // estado inicial, sin correr
       if (corriendo()) correr();
       actualizarEstado();
     },
