@@ -40,14 +40,6 @@
   var elTiempoTxt = document.getElementById("ruta-tiempo-txt");
   var elRecorrido = document.getElementById("ruta-recorrido");
 
-  function prepararCanvas(c, w, h) {
-    var dpr = window.devicePixelRatio || 1;
-    c.width = Math.round(w * dpr);
-    c.height = Math.round(h * dpr);
-    var g = c.getContext("2d");
-    g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    return g;
-  }
   var M = window.Mapa;
   var fctx = M.prepararCanvas(elFondo, W, H);
   var mctx = M.prepararCanvas(elMoto, W, H);
@@ -102,11 +94,11 @@
     }
     g.lineJoin = "round";
     g.lineCap = "round";
-    g.strokeStyle = "rgba(255,255,255,.9)";
-    g.lineWidth = ancho + 3;
+    g.strokeStyle = "rgba(255,255,255,.9)";           // grosores en píxeles de pantalla
+    g.lineWidth = M.px(g, ancho + 2.5);
     g.stroke();
     g.strokeStyle = color;
-    g.lineWidth = ancho;
+    g.lineWidth = M.px(g, ancho);
     g.stroke();
   }
 
@@ -115,7 +107,7 @@
   /* ---------- galería ---------- */
   function pintarGaleria() {
     var fotos = datos.fotos, idx = elegirGaleria(fotos), d0 = fotos[0].d;
-    var gana = datos.gana;
+    var gana = datos.gana, porDibujar = [];
     elGaleria.innerHTML = "";
     idx.forEach(function (i) {
       var f = fotos[i], esGana = i === gana;
@@ -123,13 +115,9 @@
       card.className = "foto" + (esGana ? " ganadora" + (datos.final ? " final" : "") : "") + (i === actual ? " sel" : "");
       card.dataset.i = i;
       var c = document.createElement("canvas");
-      var esc = esGana ? 0.42 : 0.32;                // la ganadora se ve más grande
-      var g = prepararCanvas(c, W * esc, H * esc);
-      g.drawImage(R.fondo, 0, 0, W * esc, H * esc);
-      g.scale(esc, esc);
-      dibujarRuta(g, datos.ciudades, f.ruta, esGana ? 5 : 6, colorFoto(i));
-      window.Mapa.pines(g, datos.ciudades, {});
+      c.width = W; c.height = H;                     // proporción del mapa; la resolución se ajusta abajo
       card.appendChild(c);
+      porDibujar.push({ c: c, f: f, i: i, esGana: esGana });
       var pie = document.createElement("span");
       pie.className = "foto-pie";
       pie.innerHTML = (esGana ? '<em class="foto-tag">' + (datos.final ? "Ruta final" : "Mejor hasta ahora") + "</em>" : "") +
@@ -137,6 +125,13 @@
         (i === 0 ? " · al azar" : " · −" + pct(d0, f.d) + " %");
       card.appendChild(pie);
       elGaleria.appendChild(card);
+    });
+    // ya en pantalla, cada mini-mapa se dibuja en vectores a su resolución exacta (nada estirado)
+    porDibujar.forEach(function (m) {
+      var g = M.prepararCanvas(m.c, W, H);
+      M.dibujarFondo(g);
+      dibujarRuta(g, datos.ciudades, m.f.ruta, m.esGana ? 2.4 : 2, colorFoto(m.i));
+      M.pines(g, datos.ciudades, { escala: 0.55 });
     });
   }
 
@@ -154,8 +149,8 @@
     elTiempo.value = i;
     var f = datos.fotos[i], d0 = datos.fotos[0].d;
     fctx.clearRect(0, 0, W, H);
-    fctx.drawImage(R.fondo, 0, 0, W, H);
-    dibujarRuta(fctx, datos.ciudades, f.ruta, 3.6, colorFoto(i));
+    M.dibujarFondo(fctx);                            // vías en vectores, a la resolución del mapa grande
+    dibujarRuta(fctx, datos.ciudades, f.ruta, 3, colorFoto(i));
     recorrido = prepararRecorrido(f.ruta);
     dibujarMoto(0);
     elTiempoTxt.innerHTML = "<b>Gen " + genRel(f) + "</b> · " + R.km(f.d) +
@@ -215,7 +210,8 @@
     g.save();
     g.translate(x, y);
     g.rotate(ang);
-    g.scale(1.5, 1.5);                                // que se vea bien proyectada
+    var e = M.px(g, 1.2);                             // ≈ 50 px de ancho en pantalla, en cualquier tamaño
+    g.scale(e, e);
     if (Math.cos(ang) < 0) g.scale(1, -1);            // que no quede de cabeza al ir a la izquierda
     g.fillStyle = "rgba(0,0,0,.18)";                  // sombra
     g.beginPath(); g.ellipse(0, 9, 17, 4, 0, 0, Math.PI * 2); g.fill();
@@ -334,13 +330,30 @@
     }
   });
 
+  /* al cambiar el tamaño de la ventana o entrar a pantalla completa: todo a la resolución justa */
+  var visible = false, esperaTam = null;
+  function alCambiarTamano() {
+    clearTimeout(esperaTam);
+    esperaTam = setTimeout(function () {
+      if (!visible || !datos) return;
+      var corria = !!anim, inicio = t0;
+      rehacerCanvas();
+      pintarGaleria();
+      etiquetas = M.ubicarEtiquetas(mctx, datos.ciudades, W, H, null, M.tamEtiqueta(elMoto, W));
+      mostrar(actual);
+      if (corria) { t0 = inicio; elPlay.textContent = elPlay2.textContent = "⏸ Recorriendo…"; anim = requestAnimationFrame(cuadro); }
+    }, 120);
+  }
+  window.addEventListener("resize", alCambiarTamano);
+  document.addEventListener("fullscreenchange", alCambiarTamano);
+
   function rehacerCanvas() {
     fctx = M.prepararCanvas(elFondo, W, H);
     mctx = M.prepararCanvas(elMoto, W, H);
   }
 
   window.Presentacion.registrar("slide-demo-ruta", {
-    start: function () { rehacerCanvas(); preparar(); },
-    stop: function () { pararMoto(); ampliar.cerrar(); }
+    start: function () { visible = true; rehacerCanvas(); preparar(); },
+    stop: function () { visible = false; pararMoto(); ampliar.cerrar(); }
   });
 })();

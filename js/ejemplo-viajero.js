@@ -43,7 +43,7 @@
 
   var M = window.Mapa;
   var W = M.W, H = M.H;           // tamaño lógico del mapa (proporción real del valle)
-  var CW = 700, CH = 105;         // tamaño lógico de la curva (cerca de su tamaño en pantalla: letras legibles)
+  var CW = 700, CH = 105;         // la curva se dibuja en píxeles de pantalla: se rehace con su tamaño real         // tamaño lógico de la curva (cerca de su tamaño en pantalla: letras legibles)
   var K = 5, ELITE = 2;           // presión de selección y élites
   var LIMITE_SIN_MEJORA = 200;    // generaciones sin mejorar antes de detenerse
   var ESTANCA = 30;               // desde aquí la curva marca el tramo como "estancado"
@@ -111,18 +111,26 @@
   var elPlay2 = document.getElementById("via-play2");
   var ciclo = window.Ciclo.crear(document.getElementById("via-ciclo"));
 
-  /* ---------- canvas con nitidez (retina) ---------- */
-  function prepararCanvas(c, w, h) {
-    var dpr = window.devicePixelRatio || 1;
-    c.width = Math.round(w * dpr);
-    c.height = Math.round(h * dpr);
-    var g = c.getContext("2d");
-    g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    return g;
-  }
   var pctx = M.prepararCanvas(elPlano, W, H);
   var ctx = M.prepararCanvas(elMapa, W, H);
-  var cctx = prepararCanvas(elCurva, CW, CH);
+  var cctx = prepararCurva();
+
+  /* la curva en píxeles de pantalla: textos de 15 px reales y líneas nítidas */
+  function prepararCurva() {
+    if (elCurva.clientWidth) { CW = elCurva.clientWidth; CH = elCurva.clientHeight; }
+    return M.prepararCanvas(elCurva, CW, CH);
+  }
+
+  /* todos los canvas a la resolución con que se ven ahora (al entrar, al cambiar el tamaño
+     de la ventana, al entrar o salir de pantalla completa y al ampliar el mapa) */
+  function rehacerCanvas() {
+    pctx = M.prepararCanvas(elPlano, W, H);
+    ctx = M.prepararCanvas(elMapa, W, H);
+    cctx = prepararCurva();
+    M.dibujarFondo(pctx);
+    if (ciudades.length) etiquetas = M.ubicarEtiquetas(ctx, ciudades, W, H, zonaLeyenda(), M.tamEtiqueta(elMapa, W));
+    if (poblacion.length) pintar();
+  }
 
   function ri(n) { return Math.floor(Math.random() * n); }
   function km(m) { return (m / 1000).toFixed(1).replace(".", ",") + " km"; }   // las distancias van en metros
@@ -399,7 +407,7 @@
       trazarRuta(ctx, r);
     }
     ctx.strokeStyle = M.COLOR.poblacion;
-    ctx.lineWidth = 1.7;
+    ctx.lineWidth = M.px(ctx, 1.4);
     ctx.lineJoin = "round";
     ctx.stroke();
   }
@@ -412,11 +420,11 @@
       ctx.beginPath();
       trazarRuta(ctx, mejorRuta);
       ctx.strokeStyle = "rgba(255,255,255,.9)";        // borde blanco: se lee sobre el plano
-      ctx.lineWidth = 6.5;
+      ctx.lineWidth = M.px(ctx, 5.5);
       ctx.lineJoin = "round";
       ctx.stroke();
       ctx.strokeStyle = colorMejor();
-      ctx.lineWidth = 3.6;
+      ctx.lineWidth = M.px(ctx, 3);
       ctx.stroke();
     }
     M.pines(ctx, ciudades, {});
@@ -654,11 +662,7 @@
 
   /* ---------- ampliar el mapa ---------- */
   var ampliar = M.ampliable(document.getElementById("via-mapa"), function () {
-    // otro tamaño en pantalla: se rehacen los canvas con la resolución justa
-    pctx = M.prepararCanvas(elPlano, W, H);
-    ctx = M.prepararCanvas(elMapa, W, H);
-    M.dibujarFondo(pctx);
-    reubicarEtiquetas();
+    rehacerCanvas();                                  // otro tamaño en pantalla: resolución justa
   });
 
   /* ---------- datos de la corrida para la slide 12 ---------- */
@@ -683,8 +687,8 @@
   window.Presentacion.registrar("slide-demo-viajero", {
     start: function () {
       visible = true;
-      if (!poblacion.length) { M.dibujarFondo(pctx); ciudades = []; ajustarBarrios(); }  // estado inicial, sin correr
-      else reubicarEtiquetas();                       // la pantalla pudo cambiar de tamaño
+      if (!poblacion.length) { ciudades = []; ajustarBarrios(); }  // estado inicial, sin correr
+      rehacerCanvas();                                // la pantalla pudo cambiar de tamaño
       if (corriendo()) correr();
       actualizarEstado();
     },
@@ -696,7 +700,13 @@
     etiquetas = M.ubicarEtiquetas(ctx, ciudades, W, H, zonaLeyenda(), M.tamEtiqueta(elMapa, W));
     dibujarRuta();
   }
-  window.addEventListener("resize", function () { if (visible) reubicarEtiquetas(); });
+  var esperaTam = null;
+  function alCambiarTamano() {
+    clearTimeout(esperaTam);
+    esperaTam = setTimeout(function () { if (visible) rehacerCanvas(); }, 120);
+  }
+  window.addEventListener("resize", alCambiarTamano);
+  document.addEventListener("fullscreenchange", alCambiarTamano);
 
   // las etiquetas usan la tipografía web: al terminar de cargar, se vuelven a medir
   if (document.fonts && document.fonts.ready) {

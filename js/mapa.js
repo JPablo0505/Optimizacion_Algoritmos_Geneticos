@@ -20,7 +20,11 @@
    · COLOR             colores de las rutas (alto contraste sobre las vías):
                        candidata = mejor ruta HASTA AHORA (aún puede mejorar),
                        final = ruta final (el algoritmo se detuvo), poblacion
-   · prepararCanvas(c, w, h)  resolución según el tamaño real en pantalla
+   · prepararCanvas(c, w, h)  el canvas se dibuja a la resolución EXACTA con que se ve
+                       (píxeles de pantalla × devicePixelRatio): ni el navegador lo estira
+                       (borroso) ni lo encoge (líneas serruchadas). Se dibuja en unidades
+                       lógicas w × h; Mapa.px(g, n) convierte n píxeles de pantalla a esas unidades,
+                       así grosores, pines y letras miden lo mismo en cualquier pantalla.
    · ampliable(wrap, alCambiar)  botón "⛶ Ampliar": el mapa a casi toda la pantalla
    · pines / ubicarEtiquetas / etiquetas / tamEtiqueta / redondeado
    ========================================================= */
@@ -86,14 +90,20 @@
 
   /* canvas nítido: la resolución interna sigue al tamaño con que se ve en pantalla */
   function prepararCanvas(c, w, h) {
-    var r = c.getBoundingClientRect();
-    var k = (window.devicePixelRatio || 1) * Math.max(1, r.width ? r.width / w : 1);
-    c.width = Math.round(w * k);
-    c.height = Math.round(h * k);
+    // área interior (sin el borde del canvas), en píxeles de pantalla
+    var dpr = window.devicePixelRatio || 1;
+    var ancho = c.clientWidth || w, alto = c.clientHeight || ancho * h / w;
+    c.width = Math.max(1, Math.round(ancho * dpr));
+    c.height = Math.max(1, Math.round(alto * dpr));
     var g = c.getContext("2d");
-    g.setTransform(k, 0, 0, k, 0, 0);
+    g.setTransform(c.width / w, 0, 0, c.height / h, 0, 0);
+    g.imageSmoothingQuality = "high";
+    g.pxLog = w / ancho;                             // unidades lógicas por píxel de pantalla
     return g;
   }
+
+  /* n píxeles de pantalla, en las unidades lógicas de ese canvas */
+  function pxPantalla(g, n) { return n * (g.pxLog || 1); }
 
   /* botón "⛶ Ampliar": pone el mapa a casi toda la pantalla sobre un velo oscuro.
      Se cierra con el mismo botón, con Esc o con un clic en el velo.
@@ -151,12 +161,13 @@
     g.fillRect(0, 0, W, H);
     g.lineCap = "round";
     g.lineJoin = "round";
+    // grosores en píxeles de pantalla: se ven iguales en un mapa chico o ampliado
     lineas(g, D.rio);                                // el río Medellín
-    g.strokeStyle = "#c6dff0"; g.lineWidth = 4.5; g.stroke();
+    g.strokeStyle = "#c6dff0"; g.lineWidth = pxPantalla(g, 3.5); g.stroke();
     lineas(g, D.vias.secundarias);                   // secundarias y terciarias
-    g.strokeStyle = "#e2ded3"; g.lineWidth = 1.3; g.stroke();
+    g.strokeStyle = "#e0dbcf"; g.lineWidth = pxPantalla(g, 1); g.stroke();
     lineas(g, D.vias.principales);                   // autopistas, troncales y primarias
-    g.strokeStyle = "#ecdfb8"; g.lineWidth = 2.6; g.stroke();
+    g.strokeStyle = "#e8d9ac"; g.lineWidth = pxPantalla(g, 2); g.stroke();
     g.restore();
   }
 
@@ -174,7 +185,7 @@
      opciones: { visitados: {indice: true}, escala: n } */
   function pines(g, ciudades, op) {
     op = op || {};
-    var e = op.escala || 1;
+    var e = (op.escala || 1) * pxPantalla(g, 0.8);           // tamaño en píxeles de pantalla
     for (var c = 0; c < ciudades.length; c++) {
       var q = ciudades[c];
       if (q.bodega) {                                // la Bodega: una casita
@@ -195,15 +206,15 @@
       }
       var visto = op.visitados && op.visitados[c];
       g.beginPath();
-      g.arc(q.x, q.y, 6 * e, 0, Math.PI * 2);
+      g.arc(q.x, q.y, 6.5 * e, 0, Math.PI * 2);
       g.fillStyle = visto ? "#026937" : "#0e8c7f";
       g.fill();
       g.lineWidth = 2.2 * e;
       g.strokeStyle = "#ffffff";
       g.stroke();
       if (visto) {                                   // ✓ de visitado
-        g.strokeStyle = "#fff"; g.lineWidth = 1.8;
-        g.beginPath(); g.moveTo(q.x - 3, q.y); g.lineTo(q.x - 0.8, q.y + 2.4); g.lineTo(q.x + 3.2, q.y - 2.4); g.stroke();
+        g.strokeStyle = "#fff"; g.lineWidth = 1.8 * e;
+        g.beginPath(); g.moveTo(q.x - 3 * e, q.y); g.lineTo(q.x - 0.8 * e, q.y + 2.4 * e); g.lineTo(q.x + 3.2 * e, q.y - 2.4 * e); g.stroke();
       }
     }
   }
@@ -228,13 +239,14 @@
     var puestas = (reservado || []).slice(), out = [];
     var orden = ciudades.map(function (_, i) { return i; })
       .sort(function (a, b) { return (ciudades[b].bodega ? 1 : 0) - (ciudades[a].bodega ? 1 : 0); });
-    var pinesR = ciudades.map(function (q) { return { x: q.x - 9, y: q.y - 13, w: 18, h: 24 }; });
+    var u = tam / 16;                                // los pines miden en proporción a la letra
+    var pinesR = ciudades.map(function (q) { return { x: q.x - 9 * u, y: q.y - 13 * u, w: 18 * u, h: 24 * u }; });
     orden.forEach(function (i) {
       var q = ciudades[i], txt = texto(q);
       var tw = g.measureText(txt).width + 10, th = Math.round(tam * 1.32);
       var cand = [
-        { x: q.x + 11, y: q.y - th / 2 }, { x: q.x - 11 - tw, y: q.y - th / 2 },
-        { x: q.x - tw / 2, y: q.y - 16 - th }, { x: q.x - tw / 2, y: q.y + 13 }
+        { x: q.x + 11 * u, y: q.y - th / 2 }, { x: q.x - 11 * u - tw, y: q.y - th / 2 },
+        { x: q.x - tw / 2, y: q.y - 16 * u - th }, { x: q.x - tw / 2, y: q.y + 13 * u }
       ];
       for (var k = 0; k < cand.length; k++) {
         var rr = { x: cand[k].x, y: cand[k].y, w: tw, h: th };
@@ -296,6 +308,7 @@
     fuente: D.fuente,
     COLOR: COLOR,
     prepararCanvas: prepararCanvas,
+    px: pxPantalla,
     ampliable: ampliable,
     distancia: distancia,
     camino: camino,
