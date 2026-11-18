@@ -14,6 +14,8 @@
      ciclo.modo("paso")      → nada se mueve solo; cada etapa se
                                ilumina cuando el código la ejecuta:
      ciclo.marcar("cruzar", "El hijo toma el comienzo de un padre…")
+   Opción: Ciclo.crear(contenedor, { frase: otroElemento }) muestra
+   la frase en otro lugar (por ejemplo, junto a la población).
    ========================================================= */
 (function () {
   "use strict";
@@ -26,7 +28,8 @@
     { id: "repetir", txt: "Repetir" }
   ];
 
-  function crear(cont) {
+  function crear(cont, opciones) {
+    opciones = opciones || {};
     var raiz = document.createElement("div");
     raiz.className = "ciclo";
     raiz.setAttribute("aria-label", "Etapas del algoritmo genético");
@@ -50,12 +53,12 @@
       chips[e.id] = c;
     });
 
-    var frase = document.createElement("p");
-    frase.className = "ciclo-frase";
+    var frase = opciones.frase || document.createElement("p");
+    frase.classList.add("ciclo-frase");
     frase.setAttribute("aria-live", "polite");
 
     raiz.appendChild(fila);
-    raiz.appendChild(frase);
+    if (!opciones.frase) raiz.appendChild(frase);
     cont.appendChild(raiz);
 
     var modoActual = "";

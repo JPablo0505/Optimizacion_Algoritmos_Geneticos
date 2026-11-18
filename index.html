@@ -310,10 +310,14 @@
           <div class="stat estado"><b id="obj-estado">Listo para iniciar</b><span>Estado</span></div>
         </div>
       </div>
-      <div class="demo-main">
+      <div class="demo-main" id="obj-main">
         <div class="pal-barra">
+          <div class="pasos-btns" id="obj-pasos">
+            <button class="btn" id="obj-siggen">⏭ Siguiente generación</button>
+            <button class="btn" id="obj-vercruce">🔍 Ver un cruce en cámara lenta</button>
+          </div>
           <label class="sw"><input type="checkbox" id="obj-origen">
-            <span>Ver de dónde viene cada letra</span></label>
+            <span>Ver de dónde viene<br>cada letra</span></label>
         </div>
         <div class="leyenda" id="obj-leyenda" hidden>
           <span><i class="lg-ok"></i>letra correcta</span>
@@ -322,7 +326,9 @@
           <span><i class="lg-mut"></i>mutación</span>
           <span><em class="et-elite">élite</em>pasó intacta</span>
         </div>
+        <p id="obj-frase"></p>
         <div id="obj-filas"></div>
+        <div class="cam" id="obj-camara" hidden></div>
         <p class="hint"><b>Qué observar:</b> las letras en <b>verde</b> ya están en su lugar. Se detiene
         sola al encontrar la palabra, o si pasa mucho tiempo sin mejorar. Cambie el objetivo mientras corre.</p>
       </div>

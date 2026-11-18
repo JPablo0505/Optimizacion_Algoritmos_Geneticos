@@ -15,6 +15,14 @@
      "mut"   → cambiada al azar por la mutación
      "elite" → el individuo entero pasó intacto (elitismo)
 
+   Modo paso a paso (con la demo en pausa):
+   · "Siguiente generación" avanza exactamente una generación
+     mientras el panel del ciclo ilumina cada etapa.
+   · "Ver un cruce en cámara lenta" toma la población REAL, hace
+     dos torneos reales, un cruce y una mutación reales, y los
+     muestra en 6 pasos. Ese hijo es un ejemplo: no se agrega a
+     la población (así la corrida no cambia por mirarla).
+
    Condiciones de parada (como en todo algoritmo genético):
    · encontró la palabra                 → se detiene y lo avisa
    · max(150, 15 × largo) gen. sin mejora → se detiene (estancado)
@@ -48,6 +56,9 @@
 
   var visible = false;
   var temporizador = null;
+  var modoPaso = false;           // el presentador está avanzando a mano
+  var barrido = null;             // temporizador de "Siguiente generación"
+  var cam = null;                 // estado de la cámara lenta (null = cerrada)
 
   /* ---------- referencias al DOM ---------- */
   var elPalabra = document.getElementById("obj-palabra");
@@ -64,8 +75,14 @@
   var elMejor = document.getElementById("obj-mejor");
   var elProm = document.getElementById("obj-prom");
   var elEstado = document.getElementById("obj-estado");
-  var ciclo = window.Ciclo.crear(document.getElementById("obj-ciclo"));
+  var elFrase = document.getElementById("obj-frase");
+  var ciclo = window.Ciclo.crear(document.getElementById("obj-ciclo"), { frase: elFrase });
+  var elMain = document.getElementById("obj-main");
   var elFilas = document.getElementById("obj-filas");
+  var elPasos = document.getElementById("obj-pasos");
+  var elSigGen = document.getElementById("obj-siggen");
+  var elVerCruce = document.getElementById("obj-vercruce");
+  var elCam = document.getElementById("obj-camara");
 
   /* ---------- utilidades ---------- */
   function letraAlAzar() { return ALFABETO[Math.floor(Math.random() * ALFABETO.length)]; }
@@ -87,14 +104,18 @@
       .sort(function (a, b) { return puntos[b] - puntos[a]; });
   }
 
-  function sorteo(puntajes) {           // torneo de 3: gana el mejor del grupo
-    var gane = Math.floor(Math.random() * puntajes.length);
+  /* torneo de 3: se sortean 3 palabras (con reposición) y gana la de más
+     letras correctas; si empatan, se queda la primera sorteada */
+  function torneo(puntajes) {
+    var grupo = [Math.floor(Math.random() * puntajes.length)], gane = grupo[0];
     for (var t = 0; t < 2; t++) {
       var otro = Math.floor(Math.random() * puntajes.length);
+      grupo.push(otro);
       if (puntajes[otro] > puntajes[gane]) gane = otro;
     }
-    return gane;
+    return { grupo: grupo, gane: gane };
   }
+  function sorteo(puntajes) { return torneo(puntajes).gane; }
 
   /* mayúsculas, sin tildes (Á→A, Ü→U), conserva la Ñ, solo letras y espacios */
   function normalizar(txt) {
@@ -140,16 +161,17 @@
   }
 
   function mutar(hijo) {                 // cada letra cambia con probabilidad "mutacion"
-    var letras = hijo.txt.split(""), cambio = false;
+    var letras = hijo.txt.split(""), cambios = [];
     for (var i = 0; i < letras.length; i++) {
       if (Math.random() < mutacion) {
-        letras[i] = letraAlAzar();
+        var antes = letras[i];
+        letras[i] = letraAlAzar();          // puede salir la misma letra: igual cuenta como mutación
         hijo.org[i] = "mut";
-        cambio = true;
+        cambios.push({ i: i, de: antes, a: letras[i] });
       }
     }
     hijo.txt = letras.join("");
-    return cambio;
+    return cambios;
   }
 
   function copiaElite(ind) {
@@ -208,10 +230,15 @@
   }
 
   function actualizarEstado() {
-    ciclo.modo(corriendo() ? "continuo" : "quieto");   // panel del ciclo: ¿está girando?
+    // panel del ciclo: girando, a mano (paso a paso) o quieto
+    ciclo.modo(corriendo() ? "continuo" : modoPaso ? "paso" : "quieto");
     elPlay.textContent = textoBoton();
     elPlay.disabled = ganado;
     elEstado.textContent = textoEstado();
+    // los botones de paso a paso solo tienen sentido con la demo detenida
+    elPasos.hidden = corriendo() || ganado;
+    elSigGen.disabled = !!barrido;
+    elVerCruce.disabled = !!barrido;
   }
 
   /* ---------- dibujar ---------- */
@@ -247,11 +274,213 @@
         (verOrigen && ind.elite ? '<em class="et-elite">élite</em>' : "") + "</div>" +
         '<div class="f">' + f + "</div></div>";
     }
-    elFilas.style.setProperty("--n", objetivo.length);   // las fichas se achican con el largo
-    elFilas.dataset.largo = objetivo.length > 14 ? "l" : objetivo.length > 10 ? "m" : "s";
+    elMain.style.setProperty("--n", objetivo.length);    // las fichas se achican con el largo
+    elMain.dataset.largo = objetivo.length > 14 ? "l" : objetivo.length > 10 ? "m" : "s";
     elFilas.innerHTML = html;
     actualizarEstado();
   }
+
+  /* =========================================================
+     MODO PASO A PASO
+     ========================================================= */
+  function entrarModoPaso() {
+    if (!modoPaso) { modoPaso = true; ponerOrigen(true); }   // en paso a paso, el origen se ve
+    elMain.classList.add("en-paso");                        // la frase reemplaza la nota de abajo
+  }
+
+  function salirModoPaso() {
+    modoPaso = false;
+    elMain.classList.remove("en-paso");
+    cerrarCamara();
+    pararBarrido();
+    ciclo.frase("");
+    if (verOrigen) ponerOrigen(false);                   // en continuo no se recarga la pantalla
+  }
+
+  /* ---------- ⏭ Siguiente generación: el ciclo ilumina cada etapa ---------- */
+  function pararBarrido() {
+    if (barrido) { clearInterval(barrido); barrido = null; }
+  }
+
+  function siguienteGeneracion() {
+    if (barrido || corriendo() || ganado) return;
+    cerrarCamara();
+    entrarModoPaso();
+    var etapas = [
+      ["medir", "Medir: se cuenta cuántas letras de cada palabra ya están en su lugar."],
+      ["elegir", "Elegir: en sorteos de 3 palabras gana la de más letras correctas."],
+      ["cruzar", "Cruzar: cada hijo toma el comienzo de un padre y el final del otro."],
+      ["mutar", "Mutar: a veces una letra del hijo cambia al azar."],
+      ["repetir", ""]
+    ];
+    var k = 0;
+    function tic() {
+      var e = etapas[k];
+      if (e[0] === "repetir") {
+        paso();                                       // la generación se calcula de verdad aquí
+        e[1] = "Repetir: lista la generación " + generacion + ". Las 2 mejores (élite) pasaron intactas.";
+        pararBarrido();
+        pintar();
+      }
+      ciclo.marcar(e[0], e[1]);
+      k++;
+    }
+    barrido = setInterval(tic, 420);
+    actualizarEstado();                               // primero el modo "paso", luego se marca
+    tic();
+  }
+
+  /* ---------- 🔍 un cruce en cámara lenta, con datos reales ---------- */
+  var PASOS_CAM = 6;
+
+  function abrirCamara() {
+    if (corriendo() || ganado) return;
+    pararBarrido();
+    entrarModoPaso();
+    var puntos = poblacion.map(puntaje);
+    var t1 = torneo(puntos), t2 = torneo(puntos);
+    var p1 = poblacion[t1.gane], p2 = poblacion[t2.gane];
+    var corte = 1 + Math.floor(Math.random() * (objetivo.length - 1));
+    var hijo = cruzar(p1, p2, corte);
+    var cruzado = { txt: hijo.txt, org: hijo.org.slice() };   // el hijo antes de mutar
+    var cambios = mutar(hijo);
+
+    // para "Medir": 5 palabras distintas de la población, al azar
+    var idx = poblacion.map(function (_, i) { return i; });
+    for (var j = idx.length - 1; j > 0; j--) {
+      var r = Math.floor(Math.random() * (j + 1)), t = idx[j]; idx[j] = idx[r]; idx[r] = t;
+    }
+
+    cam = {
+      k: 0, t1: t1, t2: t2, p1: p1, p2: p2, corte: corte,
+      cruzado: cruzado, hijo: hijo, cambios: cambios, muestra: idx.slice(0, 5)
+    };
+    elFilas.hidden = true;
+    elCam.hidden = false;
+    actualizarEstado();
+    pintarCamara();
+  }
+
+  function cerrarCamara() {
+    if (!cam) return;
+    cam = null;
+    elCam.hidden = true;
+    elCam.innerHTML = "";
+    elFilas.hidden = false;
+    ciclo.marcar(null, "");
+  }
+
+  /* una fila de la cámara: etiqueta + fichas + puntaje.
+     modo: "ok" (verde = correcta), "origen" (azul/naranja/morado por origen),
+     "p1"/"p2" (resalta la parte que hereda ese padre) */
+  function filaCam(etq, ind, modo, extra) {
+    extra = extra || {};
+    var p = ind.txt, celdas = "";
+    for (var c = 0; c < p.length; c++) {
+      var cls = "";
+      if (modo === "ok") cls = p[c] === objetivo[c] ? "ok" : "";
+      else if (modo === "p1") cls = c < cam.corte ? "t-p1" : "t-off";
+      else if (modo === "p2") cls = c >= cam.corte ? "t-p2" : "t-off";
+      else if (modo === "origen") cls = ind.org[c] === "mut" ? "t-mut" : ind.org[c] === "p1" ? "t-p1" : "t-p2";
+      if (extra.corte && c === cam.corte) cls += " corte";
+      if (p[c] === " ") cls += " esp";
+      celdas += '<span class="' + cls + '">' + (p[c] === " " ? "␣" : p[c]) + "</span>";
+    }
+    return '<div class="cam-fila' + (extra.clase ? " " + extra.clase : "") + '">' +
+      '<div class="cam-etq">' + etq + "</div>" +
+      '<div class="str">' + celdas + "</div>" +
+      '<div class="cam-pts">' + (extra.pts === false ? "" : puntaje(ind) + "/" + objetivo.length) + "</div></div>";
+  }
+
+  function filasTorneo(t, cual) {
+    var html = "";
+    t.grupo.forEach(function (i, k) {
+      var gana = i === t.gane && t.grupo.indexOf(i) === k;   // la primera aparición del ganador
+      html += filaCam(gana ? "Gana: padre " + cual : "Sorteada", poblacion[i], "ok",
+        { clase: gana ? "gana gana-p" + cual : "pierde" });
+    });
+    return html;
+  }
+
+  function verLetra(l) { return l === " " ? "espacio" : l; }
+
+  function pintarCamara() {
+    if (!cam) return;
+    var L = objetivo.length, html = "", etapa, frase;
+    var pts1 = puntaje(cam.p1), pts2 = puntaje(cam.p2), ptsH = puntaje(cam.hijo);
+    switch (cam.k) {
+      case 0:
+        etapa = "medir";
+        frase = "Medir: a cada palabra se le cuentan las letras que ya están en su lugar.";
+        cam.muestra.forEach(function (i) { html += filaCam("Palabra", poblacion[i], "ok"); });
+        break;
+      case 1:
+        etapa = "elegir";
+        frase = "Elegir: se sortean 3 palabras y gana la que tiene más letras correctas. Será el padre 1.";
+        html = filasTorneo(cam.t1, 1);
+        break;
+      case 2:
+        etapa = "elegir";
+        frase = "Se repite el sorteo con otras 3 palabras para elegir al padre 2.";
+        html = filasTorneo(cam.t2, 2);
+        break;
+      case 3:
+        etapa = "cruzar";
+        frase = "Cruzar: se corta después de la letra " + cam.corte + ". El hijo toma el comienzo " +
+          "del padre 1 (azul) y el final del padre 2 (naranja).";
+        html = filaCam("Padre 1", cam.p1, "p1", { corte: true }) +
+          filaCam("Padre 2", cam.p2, "p2", { corte: true }) +
+          filaCam("Hijo", cam.cruzado, "origen", { corte: true, clase: "hijo", pts: false });
+        break;
+      case 4:
+        etapa = "mutar";
+        if (cam.cambios.length) {
+          frase = "Mutar: " + cam.cambios.map(function (m) {
+            return m.de === m.a
+              ? "la letra " + (m.i + 1) + " se sorteó de nuevo y le volvió a salir " + verLetra(m.a)
+              : "la letra " + (m.i + 1) + " cambió al azar de " + verLetra(m.de) + " a " + verLetra(m.a);
+          }).join("; ") + ".";
+        } else {
+          frase = "Mutar: esta vez no hubo mutación (cada letra tenía " +
+            elValMut.textContent + " de probabilidad de cambiar).";
+        }
+        html = filaCam("Antes", cam.cruzado, "origen", { pts: false }) +
+          filaCam("Después", cam.hijo, "origen", { clase: "hijo", pts: false });
+        break;
+      default:
+        etapa = "repetir";
+        var veredicto = ptsH > Math.max(pts1, pts2) ? "¡supera a sus dos padres!"
+          : ptsH >= Math.min(pts1, pts2) ? "queda a la altura de sus padres."
+          : "salió peor que sus padres: la selección lo irá descartando.";
+        frase = "Resultado: el hijo tiene " + ptsH + "/" + L + " y " + veredicto +
+          " Así se arma cada uno de los " + (poblacion.length - ELITE) + " hijos de la generación.";
+        html = filaCam("Padre 1", cam.p1, "ok", { clase: "gana-p1" }) +
+          filaCam("Padre 2", cam.p2, "ok", { clase: "gana-p2" }) +
+          filaCam("Hijo", cam.hijo, "ok", { clase: "hijo" });
+    }
+    ciclo.marcar(etapa, frase);
+    var ultimo = cam.k >= PASOS_CAM - 1;
+    elCam.innerHTML =
+      '<div class="cam-cab"><b>Un cruce en cámara lenta</b>' +
+      '<span class="cam-n">Paso ' + (cam.k + 1) + " de " + PASOS_CAM + "</span>" +
+      '<span class="cam-btns">' +
+      '<button class="btn primary" data-cam="sig">' + (ultimo ? "↻ Ver otro cruce" : "Siguiente ›") + "</button>" +
+      '<button class="btn" data-cam="cerrar">✕ Cerrar</button></span></div>' +
+      '<div class="cam-filas">' + html + "</div>";
+  }
+
+  elCam.addEventListener("click", function (e) {
+    var b = e.target.closest("[data-cam]");
+    if (!b || !cam) return;
+    b.blur();
+    if (b.dataset.cam === "cerrar") { cerrarCamara(); actualizarEstado(); return; }
+    if (cam.k >= PASOS_CAM - 1) { abrirCamara(); return; }
+    cam.k++;
+    pintarCamara();
+  });
+
+  elSigGen.addEventListener("click", function () { this.blur(); siguienteGeneracion(); });
+  elVerCruce.addEventListener("click", function () { this.blur(); abrirCamara(); });
 
   /* ---------- reloj ---------- */
   function pararReloj() {
@@ -287,6 +516,7 @@
     if (limpio !== objetivo) {
       var largoCambio = limpio.length !== objetivo.length;
       objetivo = limpio;
+      cerrarCamara();                                 // la cámara lenta mostraba otra meta
       if (largoCambio) ajustarLargo();
       ajustarMutacionAuto();
       // la meta cambió: se limpian las condiciones de parada
@@ -337,7 +567,7 @@
     } else {
       pausado = true;                                 // estaba corriendo → pausar
     }
-    if (corriendo()) correr(); else pararReloj();
+    if (corriendo()) { salirModoPaso(); correr(); } else pararReloj();
     pintar();
   });
 
@@ -359,6 +589,8 @@
 
   function reiniciar() {
     pararReloj();
+    pararBarrido();
+    cerrarCamara();
     poblacion = [];
     for (var i = 0; i < +elPob.value; i++) poblacion.push(azar());
     generacion = 0;
@@ -375,6 +607,10 @@
       if (corriendo()) correr();
       actualizarEstado();
     },
-    stop: function () { visible = false; pararReloj(); }
+    stop: function () {
+      visible = false;
+      pararReloj();
+      if (barrido) { pararBarrido(); ciclo.marcar(null, ""); }   // un barrido a medias se cancela
+    }
   });
 })();
