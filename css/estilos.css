@@ -377,7 +377,9 @@ code{font-family:var(--mono);background:rgba(2,105,55,.09);padding:.1em .4em;bor
 .stats.cuatro .stat{padding:.45rem .8rem .5rem}
 .stats.cuatro .stat b{font-size:1.4rem}
 .stats.cuatro .stat.estado{grid-column:1 / -1;display:flex;align-items:baseline;gap:.8rem;flex-direction:row-reverse;justify-content:flex-end}
-.stats.cuatro .stat.estado b{font-size:1.1rem;padding:0}
+.stats.cuatro .stat.estado{padding:.4rem .8rem}
+.stats.cuatro .stat.estado b{font-size:1rem;padding:0}
+.stats.cuatro .stat.estado span{display:none}
 .graf-lado .hint{margin:0}
 #slide-demo-viajero .demo-head{margin-bottom:.8rem}
 #slide-demo-viajero .ctrls.fila{margin-bottom:.9rem}
@@ -557,6 +559,11 @@ canvas{
 .leyenda .lg-p2{background:#f1f5f2;border-top:.3rem solid var(--c-p2)}
 .leyenda .lg-mut{background:#f1f5f2;box-shadow:inset 0 0 0 .2rem var(--c-mut)}
 .leyenda i.lg-gris{background:var(--c-pob);height:.25rem;width:1.6rem;border-radius:1rem}
+.leyenda i.lg-prom{background:#9aaaa0;height:.22rem;width:1.6rem;border-radius:1rem}
+.leyenda i.lg-record{background:var(--green);width:.65rem;height:.65rem;border-radius:50%}
+.leyenda i.lg-estanca{background:rgba(249,161,44,.3);width:1.1rem;height:.9rem;border-radius:.2rem}
+.curva-ley{margin-bottom:.35rem;gap:.2rem .8rem}
+.graf-lado .chart-label{margin-bottom:.2rem}
 .leyenda i.lg-verde{background:var(--c-ok);height:.35rem;width:1.6rem;border-radius:1rem}
 
 .srow .f{color:var(--amber);font-weight:800;text-align:right;font-size:1.3rem;font-variant-numeric:tabular-nums}

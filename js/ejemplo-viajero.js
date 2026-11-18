@@ -24,10 +24,10 @@
   "use strict";
 
   var W = 760, H = 400;           // tamaño lógico del mapa
-  var CW = 760, CH = 290;         // tamaño lógico de la curva
+  var CW = 520, CH = 210;         // tamaño lógico de la curva (cerca de su tamaño en pantalla: letras legibles)
   var K = 5, ELITE = 2;           // presión de selección y élites
   var LIMITE_SIN_MEJORA = 200;    // generaciones sin mejorar antes de detenerse
-  var ZONA_LEYENDA = [{ x: 0, y: 0, w: 360, h: 34 }];   // la leyenda HTML tapa esta esquina
+  var ESTANCA = 30;               // desde aquí la curva marca el tramo como "estancado"
   var MUESTRA_POB = 24;           // rutas grises dibujadas (no las 120: satura y es lento)
   var KM_POR_PX = 0.02;           // escala ilustrativa: el mapa mide ≈ 15 km de ancho
 
@@ -37,7 +37,11 @@
   var etiquetas = [];             // posición de cada nombre (se recalcula al cambiar los barrios)
   var dist = [];                  // matriz de distancias
   var poblacion = [];             // rutas (permutaciones de índices)
-  var historial = [];             // mejor distancia por generación
+  var historial = [];             // mejor distancia por generación (para la curva)
+  var promedios = [];             // distancia promedio de la población por generación
+  var recordsGen = [];            // generaciones en que apareció un nuevo récord
+  var curvaGen0 = 0;              // generación del primer punto de la curva
+  var esc = 1;                    // generaciones por punto (crece si la curva se hace muy larga)
   var mejorRuta = [];
   var mejorD = Infinity;
   var inicialD = null;
@@ -142,7 +146,16 @@
         dist[i][j] = Math.sqrt(dx * dx + dy * dy);
       }
     }
-    etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, ZONA_LEYENDA);
+    etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, zonaLeyenda());
+  }
+
+  /* la leyenda HTML tapa una esquina del mapa: ahí no se ponen nombres */
+  function zonaLeyenda() {
+    var ley = document.getElementById("via-leyenda");
+    var m = elMapa.getBoundingClientRect(), l = ley.getBoundingClientRect();
+    if (ley.hidden || !m.width) return [{ x: 0, y: 0, w: 560, h: 34 }];   // aún sin medidas: un margen amplio
+    var e = W / m.width;
+    return [{ x: (l.left - m.left) * e - 4, y: (l.top - m.top) * e - 4, w: l.width * e + 8, h: l.height * e + 8 }];
   }
 
   function largoRuta(r) {
@@ -186,7 +199,8 @@
     mejorD = d[mejor];
     mejorRuta = poblacion[mejor].slice();
     inicialD = mejorD;
-    historial = [mejorD];
+    historial = []; promedios = []; recordsGen = [];   // la curva empieza de nuevo
+    curvaGen0 = generacion; esc = 1;
     ultimaMejora = generacion;
     estancado = false;
     pintar();
@@ -241,19 +255,15 @@
     var d = distanciasActuales();
 
     // ¿apareció algo mejor?
-    var quien = 0;
-    for (var i = 1; i < d.length; i++) if (d[i] < d[quien]) quien = i;
+    var quien = 0, suma = d[0];
+    for (var i = 1; i < d.length; i++) { suma += d[i]; if (d[i] < d[quien]) quien = i; }
     if (d[quien] < mejorD) {
       mejorD = d[quien];
       mejorRuta = poblacion[quien].slice();
       ultimaMejora = generacion;                      // hubo mejora: se reinicia el plazo
+      recordsGen.push(generacion);
     }
-    historial.push(mejorD);
-    if (historial.length > 4000) {      // no dejar crecer el gráfico sin límite
-      var corto = [];
-      for (var h = 0; h < historial.length; h += 2) corto.push(historial[h]);
-      historial = corto;
-    }
+    anotarCurva(mejorD, suma / d.length);
 
     // nueva generación
     var orden = d.map(function (_, i) { return i; })
@@ -275,6 +285,18 @@
     }
   }
 
+  /* un punto por generación; si la curva se alarga demasiado, se guarda uno de cada dos */
+  function anotarCurva(mejor, prom) {
+    if ((generacion - curvaGen0) % esc !== 0) return;
+    historial.push(mejor);
+    promedios.push(prom);
+    if (historial.length > 3000) {
+      historial = historial.filter(function (_, k) { return k % 2 === 0; });
+      promedios = promedios.filter(function (_, k) { return k % 2 === 0; });
+      esc *= 2;
+    }
+  }
+
   /* ---------- estado visible (botón + cartel) ---------- */
   function textoBoton() {
     if (!arrancado) return "▶ Empezar";
@@ -283,7 +305,7 @@
   }
 
   function textoEstado() {
-    if (estancado) return "detenido: sin mejora";
+    if (estancado) return "Se estancó en un valle: suba la mutación o pulse Seguir";
     if (!arrancado) return "Listo para iniciar";
     if (pausado) return "pausado";
     return "corriendo…";
@@ -345,9 +367,13 @@
     window.Plano.etiquetas(ctx, ciudades, etiquetas, cursor, W);
   }
 
+  /* curva: mejor distancia (verde) y promedio de la población (gris).
+     Un punto en cada nuevo récord y una franja "estancado" donde pasaron
+     ESTANCA o más generaciones sin mejorar (el algoritmo está en un valle). */
   function dibujarCurva() {
     cctx.clearRect(0, 0, CW, CH);
-    if (historial.length < 2) {
+    var n = historial.length;
+    if (n < 2) {
       cctx.fillStyle = "#6a7d71";
       cctx.font = '16px "Plus Jakarta Sans", "Segoe UI", sans-serif';
       cctx.fillText(arrancado ? "La primera mejora aparece en un segundo…"
@@ -355,15 +381,33 @@
       return;
     }
     var mn = Infinity, mx = -Infinity, i;
-    for (i = 0; i < historial.length; i++) {
+    for (i = 0; i < n; i++) {
       if (historial[i] < mn) mn = historial[i];
-      if (historial[i] > mx) mx = historial[i];
+      if (promedios[i] > mx) mx = promedios[i];
     }
     var rango = (mx - mn) || 1;
-    var izq = 70, der = 14, arr = 12, aba = 14;
-    function X(k) { return izq + (k / (historial.length - 1)) * (CW - izq - der); }
+    var izq = 64, der = 10, arr = 10, aba = 12;
+    var genFin = curvaGen0 + (n - 1) * esc;
+    function XG(gen) { return izq + ((gen - curvaGen0) / ((genFin - curvaGen0) || 1)) * (CW - izq - der); }
+    function X(k) { return XG(curvaGen0 + k * esc); }
     function Y(v) { return arr + (1 - (v - mn) / rango) * (CH - arr - aba); }
 
+    // franjas "estancado": tramos de ESTANCA+ generaciones entre récords
+    var hitos = [curvaGen0].concat(recordsGen, [generacion]);
+    cctx.font = '700 15px "Plus Jakarta Sans", "Segoe UI", sans-serif';
+    for (i = 0; i + 1 < hitos.length; i++) {
+      if (hitos[i + 1] - hitos[i] < ESTANCA) continue;
+      var x1 = XG(hitos[i] + ESTANCA), x2 = Math.min(XG(hitos[i + 1]), CW - der);
+      if (x2 - x1 < 2) continue;
+      cctx.fillStyle = "rgba(249,161,44,.16)";
+      cctx.fillRect(x1, arr, x2 - x1, CH - arr - aba);
+      if (x2 - x1 > 82) {
+        cctx.fillStyle = "#a55f00";
+        cctx.fillText("estancado", x1 + 6, arr + 16);
+      }
+    }
+
+    // ejes
     cctx.strokeStyle = "#cddbd0";
     cctx.lineWidth = 1;
     cctx.beginPath();
@@ -372,34 +416,46 @@
     cctx.lineTo(CW - der, CH - aba);
     cctx.stroke();
 
+    // promedio de la población (gris): puede subir y bajar
     cctx.beginPath();
-    cctx.moveTo(X(0), Y(historial[0]));
-    for (i = 1; i < historial.length; i++) cctx.lineTo(X(i), Y(historial[i]));
-    cctx.strokeStyle = "#026937";
-    cctx.lineWidth = 2.6;
+    cctx.moveTo(X(0), Y(promedios[0]));
+    for (i = 1; i < n; i++) cctx.lineTo(X(i), Y(promedios[i]));
+    cctx.strokeStyle = "#9aaaa0";
+    cctx.lineWidth = 1.8;
     cctx.lineJoin = "round";
     cctx.stroke();
 
-    var degradado = cctx.createLinearGradient(0, arr, 0, CH - aba);
-    degradado.addColorStop(0, "rgba(67,182,73,.30)");
-    degradado.addColorStop(1, "rgba(67,182,73,0)");
-    cctx.lineTo(X(historial.length - 1), CH - aba);
-    cctx.lineTo(X(0), CH - aba);
-    cctx.closePath();
-    cctx.fillStyle = degradado;
-    cctx.fill();
+    // mejor distancia (verde): con elitismo nunca sube
+    cctx.beginPath();
+    cctx.moveTo(X(0), Y(historial[0]));
+    for (i = 1; i < n; i++) cctx.lineTo(X(i), Y(historial[i]));
+    cctx.strokeStyle = "#026937";
+    cctx.lineWidth = 2.8;
+    cctx.stroke();
 
-    cctx.font = '14px "Plus Jakarta Sans", "Segoe UI", sans-serif';
+    // un punto por cada nuevo récord
+    cctx.fillStyle = "#43b649";
+    cctx.strokeStyle = "#fff";
+    cctx.lineWidth = 1.5;
+    for (i = 0; i < recordsGen.length; i++) {
+      var k = Math.round((recordsGen[i] - curvaGen0) / esc);
+      if (k < 0 || k >= n) continue;
+      cctx.beginPath();
+      cctx.arc(XG(recordsGen[i]), Y(historial[k]), 3.6, 0, Math.PI * 2);
+      cctx.fill();
+      cctx.stroke();
+    }
+
+    cctx.font = '15px "Plus Jakarta Sans", "Segoe UI", sans-serif';
     cctx.fillStyle = "#6a7d71";
     cctx.textAlign = "right";
-    cctx.fillText(km(mx), izq - 6, arr + 10);
+    cctx.fillText(km(mx), izq - 6, arr + 12);
     cctx.fillText(km(mn), izq - 6, CH - aba);
     cctx.textAlign = "left";
     cctx.fillStyle = "#026937";
     cctx.font = "700 16px 'Plus Jakarta Sans', 'Segoe UI', sans-serif";
-    cctx.fillText("mejor: " + km(historial[historial.length - 1]),
-      Math.min(X(historial.length - 1) + 6, CW - 140),
-      Math.max(Y(historial[historial.length - 1]) - 7, 15));
+    var ult = historial[n - 1];
+    cctx.fillText("mejor: " + km(ult), Math.min(X(n - 1) + 6, CW - 140), Math.max(Y(ult) - 8, 30));
   }
 
   function pintar() {
@@ -460,6 +516,7 @@
   elVerPob.addEventListener("change", function () {
     verPob = this.checked;
     document.getElementById("via-leyenda").hidden = !verPob;   // sin grises, la leyenda sobra
+    etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, zonaLeyenda());
     dibujarRuta();
   });
 
@@ -593,11 +650,19 @@
     start: function () {
       visible = true;
       if (!poblacion.length) { nuevoPlano(); ciudades = []; ajustarBarrios(); }  // estado inicial, sin correr
+      else reubicarEtiquetas();                       // la pantalla pudo cambiar de tamaño
       if (corriendo()) correr();
       actualizarEstado();
     },
     stop: function () { visible = false; pararReloj(); }
   });
+
+  function reubicarEtiquetas() {
+    if (!ciudades.length) return;
+    etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, zonaLeyenda());
+    dibujarRuta();
+  }
+  window.addEventListener("resize", function () { if (visible) reubicarEtiquetas(); });
 
   // las letras del plano y de las etiquetas usan la tipografía web: al terminar de
   // cargar, se vuelven a medir y dibujar (una sola vez)
@@ -605,7 +670,7 @@
     document.fonts.ready.then(function () {
       if (!ciudades.length) return;
       window.Plano.dibujar(pctx, W, H, semilla);
-      etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, ZONA_LEYENDA);
+      etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, zonaLeyenda());
       dibujarRuta();
     });
   }
