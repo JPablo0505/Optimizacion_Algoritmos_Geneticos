@@ -27,6 +27,16 @@
   --t-bg:#e3f3f0;
   --o-bg:#fff2dc;
 
+  /* lenguaje visual de las demos: el mismo color significa lo mismo en las dos */
+  --c-ok:#026937;      /* verde UdeA: correcto / mejor solución */
+  --c-p1:#1f63d6;      /* azul: viene del padre 1 */
+  --c-p2:#e8700c;      /* naranja: viene del padre 2 */
+  --c-mut:#8b3fe0;     /* morado: mutación */
+  --c-pob:#a3b2a8;     /* gris tenue: el resto de la población */
+  --c-p1-bg:#e4edfc;
+  --c-p2-bg:#fdeedd;
+  --c-mut-bg:#f1e8fc;
+
   --ease:cubic-bezier(.22,.8,.24,1);
   --font:"Plus Jakarta Sans","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
   --mono:"JetBrains Mono",Consolas,"Cascadia Code",monospace;
@@ -372,6 +382,30 @@ canvas{
 .bar{height:.7rem;background:#e3ece5;border-radius:1rem;overflow:hidden}
 .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--green),var(--lime));border-radius:1rem;transition:width .35s var(--ease)}
 .srow .f{color:var(--amber);font-weight:800;text-align:right;font-size:1.3rem}
+
+/* ---------- panel del ciclo (js/ciclo.js) ---------- */
+.ciclo{display:flex;flex-direction:column;align-items:center;gap:.35rem;min-width:0}
+.ciclo-chips{display:flex;align-items:center;gap:.35rem;flex-wrap:wrap;justify-content:center}
+.ciclo .chip{
+  font-size:1rem;font-weight:700;line-height:1;padding:.42rem .8rem;border-radius:999px;
+  border:1px solid var(--line);background:var(--paper);color:var(--soft);
+  transition:background .3s,color .3s,border-color .3s,box-shadow .3s;
+}
+.ciclo-flecha{color:#b3c3b8;font-weight:800;font-size:1rem}
+.ciclo .chip.on{background:var(--c-ok);border-color:var(--c-ok);color:#fff;box-shadow:0 .5rem 1rem -.6rem rgba(2,105,55,.8)}
+.ciclo .chip-cruzar.on{background:linear-gradient(90deg,var(--c-p1) 50%,var(--c-p2) 50%);border-color:transparent}
+.ciclo .chip-mutar.on{background:var(--c-mut);border-color:var(--c-mut)}
+.ciclo-frase{font-size:1rem;color:var(--ink);font-weight:600;text-align:center;line-height:1.35;max-width:46ch}
+.ciclo-frase:empty{display:none}
+/* modo continuo: una onda suave y estable recorre las etapas */
+.ciclo.continuo .chip{animation:ciclo-onda 3s ease-in-out infinite;animation-delay:calc(var(--k,0) * .6s)}
+@keyframes ciclo-onda{
+  0%,24%,100%{background:var(--paper);color:var(--soft);border-color:var(--line)}
+  7%,17%{background:var(--g-bg);color:var(--green-d);border-color:var(--green)}
+}
+@media (prefers-reduced-motion:reduce){
+  .ciclo.continuo .chip{animation:none;background:var(--g-bg);color:var(--green-d)}
+}
 
 /* =========================================================
    NAVEGACIÓN: barra inferior, puntos laterales, atajos

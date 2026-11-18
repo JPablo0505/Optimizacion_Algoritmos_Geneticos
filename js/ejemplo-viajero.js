@@ -58,6 +58,7 @@
   var elInicial = document.getElementById("via-inicial");
   var elMejora = document.getElementById("via-mejora");
   var elEstado = document.getElementById("via-estado");
+  var ciclo = window.Ciclo.crear(document.getElementById("via-ciclo"));
 
   /* ---------- canvas con nitidez (retina) ---------- */
   function prepararCanvas(c, w, h) {
@@ -233,6 +234,7 @@
   }
 
   function actualizarEstado() {
+    ciclo.modo(corriendo() ? "continuo" : "quieto");   // panel del ciclo: ¿está girando?
     elPlay.textContent = textoBoton();
     elEstado.textContent = textoEstado();
   }

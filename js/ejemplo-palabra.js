@@ -42,6 +42,7 @@
   var elMejor = document.getElementById("obj-mejor");
   var elProm = document.getElementById("obj-prom");
   var elEstado = document.getElementById("obj-estado");
+  var ciclo = window.Ciclo.crear(document.getElementById("obj-ciclo"));
   var elFilas = document.getElementById("obj-filas");
 
   /* ---------- utilidades ---------- */
@@ -137,6 +138,7 @@
   }
 
   function actualizarEstado() {
+    ciclo.modo(corriendo() ? "continuo" : "quieto");   // panel del ciclo: ¿está girando?
     elPlay.textContent = textoBoton();
     elPlay.disabled = ganado;
     elEstado.textContent = textoEstado();
