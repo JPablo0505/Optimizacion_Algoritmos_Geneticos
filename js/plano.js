@@ -156,10 +156,10 @@
      4 posiciones y, si choca con otro, se omite (se ve al pasar el cursor). */
   var FUENTE = '700 16px "Plus Jakarta Sans", "Segoe UI", sans-serif';
 
-  function ubicarEtiquetas(g, ciudades, w, h) {
+  function ubicarEtiquetas(g, ciudades, w, h, reservado) {
     g.save();
     g.font = FUENTE;
-    var puestas = [], out = [];
+    var puestas = (reservado || []).slice(), out = [];   // "reservado": zonas tapadas (p. ej. una leyenda)
     // la Bodega primero: siempre tiene etiqueta
     var orden = ciudades.map(function (_, i) { return i; })
       .sort(function (a, b) { return (ciudades[b].bodega ? 1 : 0) - (ciudades[a].bodega ? 1 : 0); });

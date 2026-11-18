@@ -389,28 +389,36 @@
     </div>
 
     <div class="demo-body viaje">
-      <div class="mapa-wrap">
-        <canvas id="plano" width="760" height="400" aria-hidden="true"></canvas>
-        <canvas id="ciudades" width="760" height="400"
-                aria-label="Plano con los barrios y la mejor ruta"></canvas>
+      <div class="mapa-col">
+        <div class="mapa-wrap">
+          <canvas id="plano" width="760" height="400" aria-hidden="true"></canvas>
+          <canvas id="ciudades" width="760" height="400"
+                  aria-label="Plano con los barrios y la mejor ruta"></canvas>
+          <div class="leyenda sobre-mapa" id="via-leyenda">
+            <span><i class="lg-verde"></i>Verde: mejor ruta</span>
+            <span><i class="lg-gris"></i>Gris: otras rutas de la población</span>
+          </div>
+        </div>
+        <div class="mapa-pie">
+          <label class="sw"><input type="checkbox" id="via-verpob" checked>
+            <span>Mostrar la población</span></label>
+          <span class="mapa-ayuda">Clic: agrega un barrio · clic en uno: lo quita · arrastrar: lo mueve</span>
+        </div>
       </div>
       <div class="graf-lado">
-        <div class="stats" style="grid-template-columns:repeat(3,minmax(0,1fr))">
+        <div class="stats cuatro">
           <div class="stat"><b id="via-gen">0</b><span>Generación</span></div>
           <div class="stat"><b id="via-mejor">-</b><span>Mejor ruta</span></div>
           <div class="stat"><b id="via-inicial">-</b><span>Al empezar</span></div>
           <div class="stat"><b id="via-mejora">-</b><span>Mejora</span></div>
-          <div class="stat estado" style="grid-column:span 2"><b id="via-estado">Listo para iniciar</b><span>Estado</span></div>
+          <div class="stat estado"><b id="via-estado">Listo para iniciar</b><span>Estado</span></div>
         </div>
         <div class="curva-lado">
           <div class="chart-label">Evolución de la mejor distancia por generación</div>
-          <canvas id="curva" width="760" height="320"></canvas>
+          <canvas id="curva" width="760" height="290"></canvas>
         </div>
       </div>
     </div>
-    <p class="hint"><b>No corre hasta que presione Empezar.</b> Se <b>detiene solo</b> cuando 200
-    generaciones no mejoran: suba la mutación o pulse <b>Seguir</b>. En el mapa, un clic en vacío
-    <b>agrega</b> un barrio, un clic sobre un barrio lo <b>quita</b> y arrastrar lo <b>mueve</b>.</p>
   </div>
 </section>
 

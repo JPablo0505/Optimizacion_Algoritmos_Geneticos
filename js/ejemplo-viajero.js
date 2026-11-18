@@ -11,6 +11,10 @@
    sola vez por "Barrios nuevos" en un canvas de fondo; encima
    va otro canvas con las rutas y los barrios.
    Distancias en línea recta; 1 px = 0,02 km (escala ilustrativa).
+   Detrás de la mejor ruta (verde) se dibujan 24 rutas de la
+   población en gris tenue: al principio van en todas direcciones
+   y, con las generaciones, se parecen cada vez más a la verde
+   (la población converge). Interruptor "Mostrar la población".
    NO arranca solo: hay que presionar "Empezar".
    Condiciones de parada (como en todo algoritmo genético):
    · 200 generaciones sin mejora → se detiene (estancado)
@@ -20,9 +24,11 @@
   "use strict";
 
   var W = 760, H = 400;           // tamaño lógico del mapa
-  var CW = 760, CH = 320;         // tamaño lógico de la curva
+  var CW = 760, CH = 290;         // tamaño lógico de la curva
   var K = 5, ELITE = 2;           // presión de selección y élites
   var LIMITE_SIN_MEJORA = 200;    // generaciones sin mejorar antes de detenerse
+  var ZONA_LEYENDA = [{ x: 0, y: 0, w: 360, h: 34 }];   // la leyenda HTML tapa esta esquina
+  var MUESTRA_POB = 24;           // rutas grises dibujadas (no las 120: satura y es lento)
   var KM_POR_PX = 0.02;           // escala ilustrativa: el mapa mide ≈ 15 km de ancho
 
   var ciudades = [];              // [{x, y, nombre, bodega}] en coordenadas lógicas; la 0 es la Bodega
@@ -53,6 +59,7 @@
   var dondeApreto = null;         // {x,y} del pointerdown
   var movio = false;
   var cursor = null;              // índice del barrio bajo el cursor (muestra su nombre)
+  var verPob = true;              // interruptor "Mostrar la población"
 
   /* ---------- referencias ---------- */
   var elPlano = document.getElementById("plano");
@@ -71,6 +78,7 @@
   var elInicial = document.getElementById("via-inicial");
   var elMejora = document.getElementById("via-mejora");
   var elEstado = document.getElementById("via-estado");
+  var elVerPob = document.getElementById("via-verpob");
   var ciclo = window.Ciclo.crear(document.getElementById("via-ciclo"));
 
   /* ---------- canvas con nitidez (retina) ---------- */
@@ -134,7 +142,7 @@
         dist[i][j] = Math.sqrt(dx * dx + dy * dy);
       }
     }
-    etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H);
+    etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, ZONA_LEYENDA);
   }
 
   function largoRuta(r) {
@@ -297,8 +305,32 @@
     g.closePath();
   }
 
+  /* rutas de la población en gris tenue, todas en un solo trazo.
+     Se saltan las élites (son copias de las mejores) y se toma una muestra
+     repartida por toda la población: los hijos ocupan posiciones al azar. */
+  function dibujarPoblacion() {
+    var n = poblacion.length - ELITE;
+    if (n <= 0 || !ciudades.length) return;
+    var cuantas = Math.min(MUESTRA_POB, n), salto = n / cuantas;
+    ctx.beginPath();
+    for (var k = 0; k < cuantas; k++) {
+      var r = poblacion[ELITE + Math.floor(k * salto)];
+      if (!r || r.length !== ciudades.length) continue;   // ruta de un mapa anterior
+      for (var i = 0; i < r.length; i++) {
+        var p = ciudades[r[i]];
+        if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+      }
+      ctx.closePath();
+    }
+    ctx.strokeStyle = "rgba(70,86,78,.22)";
+    ctx.lineWidth = 1.2;
+    ctx.lineJoin = "round";
+    ctx.stroke();
+  }
+
   function dibujarRuta() {
     ctx.clearRect(0, 0, W, H);
+    if (verPob) dibujarPoblacion();
     if (mejorRuta.length && ciudades.length) {
       trazarRuta(ctx, mejorRuta);
       ctx.strokeStyle = "rgba(255,255,255,.9)";        // borde blanco: se lee sobre el plano
@@ -425,6 +457,11 @@
     }
   });
   elVel.addEventListener("change", function () { if (reloj) correr(); });
+  elVerPob.addEventListener("change", function () {
+    verPob = this.checked;
+    document.getElementById("via-leyenda").hidden = !verPob;   // sin grises, la leyenda sobra
+    dibujarRuta();
+  });
 
   elPlay.addEventListener("click", function () {
     this.blur();
@@ -568,7 +605,7 @@
     document.fonts.ready.then(function () {
       if (!ciudades.length) return;
       window.Plano.dibujar(pctx, W, H, semilla);
-      etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H);
+      etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, ZONA_LEYENDA);
       dibujarRuta();
     });
   }

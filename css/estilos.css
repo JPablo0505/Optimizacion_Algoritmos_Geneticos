@@ -363,7 +363,25 @@ code{font-family:var(--mono);background:rgba(2,105,55,.09);padding:.1em .4em;bor
 
 .demo-body{display:grid;gap:1.8rem;align-items:start}
 .demo-body.palabra{grid-template-columns:minmax(0,.62fr) minmax(0,1fr)}
-.demo-body.viaje{grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);align-items:center}
+.demo-body.viaje{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:1.4rem;align-items:start}
+.mapa-col{display:flex;flex-direction:column;gap:.5rem;min-width:0}
+.mapa-pie{display:flex;align-items:center;gap:.4rem 1rem;flex-wrap:wrap}
+.mapa-ayuda{font-size:1rem;color:var(--soft)}
+.leyenda.sobre-mapa{
+  position:absolute;left:.6rem;top:.6rem;pointer-events:none;
+  background:rgba(255,255,255,.9);border-radius:.6rem;padding:.25rem .6rem;gap:.2rem .9rem;color:var(--ink);
+}
+.leyenda.sobre-mapa[hidden]{display:none}
+#slide-demo-palabra,#slide-demo-viajero{padding-top:clamp(1rem,2.6vh,2.2rem)}
+.stats.cuatro{grid-template-columns:repeat(4,minmax(0,1fr));gap:.6rem}
+.stats.cuatro .stat{padding:.45rem .8rem .5rem}
+.stats.cuatro .stat b{font-size:1.4rem}
+.stats.cuatro .stat.estado{grid-column:1 / -1;display:flex;align-items:baseline;gap:.8rem;flex-direction:row-reverse;justify-content:flex-end}
+.stats.cuatro .stat.estado b{font-size:1.1rem;padding:0}
+.graf-lado .hint{margin:0}
+#slide-demo-viajero .demo-head{margin-bottom:.8rem}
+#slide-demo-viajero .ctrls.fila{margin-bottom:.9rem}
+#slide-demo-viajero .ctrls.fila .ctl{padding:.5rem 1rem .55rem}
 .demo-side{display:flex;flex-direction:column;gap:.8rem}
 .demo-main{display:flex;flex-direction:column;gap:.9rem;min-width:0}
 
@@ -372,13 +390,13 @@ canvas{
   background:#fbfdfb;border:1px solid var(--line);border-radius:1.2rem;
 }
 /* mapa del repartidor: plano de fondo + canvas de rutas encima */
-.mapa-wrap{position:relative;width:100%;max-width:calc(46vh * 1.9);aspect-ratio:760 / 400}
+.mapa-wrap{position:relative;width:100%;max-width:calc(47vh * 1.9);aspect-ratio:760 / 400}
 .mapa-wrap canvas{position:absolute;inset:0;width:100%;height:100%;margin:0}
 #ciudades{cursor:crosshair;touch-action:none;background:transparent}
 #plano{background:#fbfaf6}
 #curva{margin:0}
 .chart-label{margin:0 0 .5rem;font-size:1.02rem;color:var(--muted);font-weight:700}
-.graf-lado{display:flex;flex-direction:column;gap:1rem;min-width:0}
+.graf-lado{display:flex;flex-direction:column;gap:.8rem;min-width:0}
 
 .hint{font-size:1.02rem;color:var(--soft);line-height:1.55;margin-top:1rem}
 .demo-main .hint{margin-top:0}
