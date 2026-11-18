@@ -59,6 +59,10 @@
   --pad-card:1.2rem 1.5rem;                    /* relleno de tarjetas y cajas */
   --radio:1.5rem;
 
+  /* entradas por etapas: con 15 elementos, la última termina antes de 1,8 s (tope: 2 s) */
+  --t-entrada:.8s;
+  --t-escalon:.055s;
+
   --ease:cubic-bezier(.22,.8,.24,1);
   --font:"Plus Jakarta Sans","Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
   --mono:"JetBrains Mono",Consolas,"Cascadia Code",monospace;
@@ -247,8 +251,7 @@ td:first-child{color:var(--ink);font-weight:700;width:36%}
   display:flex;align-items:center;gap:.8rem;
   color:var(--amber);font-size:1.3rem;font-weight:700;
 }
-.loop .spin{display:inline-block;font-size:1.7rem;line-height:1;animation:spin 5s linear infinite}
-@keyframes spin{to{transform:rotate(-360deg)}}
+.loop .spin{display:inline-block;font-size:1.7rem;line-height:1}   /* quieta: los pasos ya se encienden en turno */
 
 /* ---------- mini diagramas (cruce y mutación) ---------- */
 .mini{display:grid;gap:.4rem;margin-top:.7rem;width:100%}
@@ -805,8 +808,8 @@ button:focus-visible,a:focus-visible,select:focus-visible,input[type=text]:focus
 .js .rv{opacity:0}
 .slide.active .rv{
   opacity:1;
-  animation:rv-arriba .85s var(--ease) backwards;
-  animation-delay:calc(.28s + var(--i,0) * .085s);
+  animation:rv-arriba var(--t-entrada) var(--ease) backwards;
+  animation-delay:calc(.2s + var(--i,0) * var(--t-escalon));
 }
 .slide.active .rv-izq{animation-name:rv-izq}
 .slide.active .rv-zoom{animation-name:rv-zoom}
@@ -821,8 +824,8 @@ button:focus-visible,a:focus-visible,select:focus-visible,input[type=text]:focus
 
 /* el bucle: cada paso se enciende en turno, una y otra vez */
 .slide.active .step.rv{
-  animation:rv-zoom .8s var(--ease) backwards,turno 9s ease-in-out infinite;
-  animation-delay:calc(.28s + var(--i,0) * .085s),calc(1.8s + var(--k,0) * 1.5s);
+  animation:rv-zoom var(--t-entrada) var(--ease) backwards,turno 9s ease-in-out infinite;
+  animation-delay:calc(.2s + var(--i,0) * var(--t-escalon)),calc(1.8s + var(--k,0) * 1.5s);
 }
 @keyframes turno{
   0%,17%,100%{background:var(--card);border-color:var(--line);box-shadow:none}
