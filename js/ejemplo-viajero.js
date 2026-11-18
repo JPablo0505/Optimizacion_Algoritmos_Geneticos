@@ -43,7 +43,7 @@
 
   var M = window.Mapa;
   var W = M.W, H = M.H;           // tamaño lógico del mapa (proporción real del valle)
-  var CW = 700, CH = 125;         // tamaño lógico de la curva (cerca de su tamaño en pantalla: letras legibles)
+  var CW = 700, CH = 105;         // tamaño lógico de la curva (cerca de su tamaño en pantalla: letras legibles)
   var K = 5, ELITE = 2;           // presión de selección y élites
   var LIMITE_SIN_MEJORA = 200;    // generaciones sin mejorar antes de detenerse
   var ESTANCA = 30;               // desde aquí la curva marca el tramo como "estancado"
