@@ -430,10 +430,10 @@ canvas{
 @keyframes destello-mut{0%{background:var(--c-mut);color:#fff;transform:scale(1.12)}100%{transform:none}}
 .bar{position:relative}
 .et-elite{
-  font-style:normal;font-family:var(--font);font-size:.85rem;font-weight:800;letter-spacing:.02em;
+  font-style:normal;font-family:var(--font);font-size:.95rem;font-weight:800;letter-spacing:.02em;
   color:var(--green-d);background:#fff;border:1px solid var(--green);border-radius:999px;padding:.05rem .45rem;
 }
-.srow .et-elite{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:.85rem}
+.srow .et-elite{position:absolute;right:0;top:50%;transform:translateY(-50%);font-size:.95rem}
 
 /* cámara lenta de un cruce */
 .cam[hidden]{display:none}
@@ -475,6 +475,43 @@ canvas{
   content:"";position:absolute;left:calc(-.09rem - 2px);top:-.35rem;bottom:-.35rem;width:3px;
   background:var(--ink);border-radius:2px;
 }
+
+/* comparación con probar al azar */
+.azar{font-size:1rem;line-height:1.45;color:var(--muted);background:var(--paper);border-radius:.9rem;padding:.55rem .9rem}
+.azar b{color:var(--ink)}
+
+/* pestañas Población / Historia */
+.tabs{display:inline-flex;background:var(--paper);border:1px solid var(--line);border-radius:999px;padding:.2rem}
+.tabs[hidden]{display:none}
+.tabs button{
+  font-family:inherit;font-size:1rem;font-weight:700;color:var(--muted);background:transparent;border:0;
+  border-radius:999px;padding:.45rem 1rem;cursor:pointer;transition:background .2s,color .2s;
+}
+.tabs button.on{background:var(--green-d);color:#fff}
+.tabs button:focus-visible{outline:.2rem solid var(--teal-l);outline-offset:.1rem}
+
+/* historia de la palabra ganadora */
+.historia[hidden]{display:none}
+.historia{display:flex;flex-direction:column;gap:.4rem}
+#obj-main.en-historia #obj-filas,#obj-main.en-historia .leyenda,#obj-main.en-historia > .hint{display:none}
+.hist-tit{font-size:1.05rem;font-weight:700;color:var(--ink)}
+.hist-tit small{font-weight:500;color:var(--soft)}
+.hist-linea{display:flex;flex-direction:column;gap:.15rem}
+.hist-rec{padding:.15rem .5rem}
+.hist-rec + .hist-rec .cam-etq::before{content:"↓ ";color:var(--soft)}
+.cam-fila .str > span.nueva{box-shadow:0 0 0 .18rem #fff,0 0 0 .36rem var(--lime)}
+.hist-letras{display:grid;grid-template-columns:repeat(min(var(--n),10),minmax(0,1fr));gap:.35rem}
+.hist-letra{
+  font-family:inherit;cursor:pointer;border-radius:.7rem;padding:.3rem .2rem;
+  display:flex;flex-direction:column;align-items:center;gap:.05rem;border:2px solid transparent;
+}
+.hist-letra b{font-family:var(--mono);font-size:1.35rem;line-height:1.1}
+.hist-letra small{font-size:.95rem;font-weight:700;white-space:nowrap}
+.hist-letra.h-ini{background:var(--g-bg);color:var(--green-d)}
+.hist-letra.h-mut{background:var(--c-mut-bg);color:var(--c-mut)}
+.hist-letra.sel,.hist-letra:hover{border-color:currentColor}
+.hist-frase{font-size:1.1rem;font-weight:600;color:var(--ink)}
+.hist-resumen{font-size:1rem;color:var(--muted);line-height:1.45}
 
 /* frase del paso a paso (la escribe el panel del ciclo) */
 #obj-frase{font-size:1.05rem;text-align:left;max-width:none;color:var(--ink);

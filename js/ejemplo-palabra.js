@@ -7,8 +7,14 @@
    se normaliza (mayúsculas, sin tildes, conserva la Ñ).
    Mutación automática: 1 / largo (≈ 1 letra cambiada por hijo).
 
-   Cada individuo es { txt, org } donde org[i] dice de dónde
-   salió la letra i en esta generación:
+   Cada individuo es { txt, org, hist }.
+   hist[i] = { gen, tipo } dice dónde NACIÓ la letra i:
+     tipo "inicial"  → venía en una palabra al azar (gen 0, o al
+                       agrandar la población / alargar el objetivo)
+     tipo "mutación" → apareció por mutación en esa generación
+   Al cruzar, el hijo hereda el hist del padre que le dio la letra;
+   así se puede contar la historia de la palabra ganadora.
+   org[i] dice de dónde salió la letra i en ESTA generación:
      "ini"   → población inicial al azar
      "p1"    → copiada del padre 1 (el comienzo, antes del corte)
      "p2"    → copiada del padre 2 (el final, después del corte)
@@ -27,6 +33,10 @@
    · encontró la palabra                 → se detiene y lo avisa
    · max(150, 15 × largo) gen. sin mejora → se detiene (estancado)
    · pausa manual                         → el usuario lo para
+
+   Al encontrar la palabra aparece "Ver la historia": los récords
+   (la mejor palabra cada vez que sube el puntaje) y de dónde salió
+   cada letra de la ganadora. Una línea compara con probar al azar.
    ========================================================= */
 (function () {
   "use strict";
@@ -53,6 +63,9 @@
   var estancado = false;          // sin mejora en el límite → condición de parada
   var mejorAnt = 0;
   var ultimaMejora = 0;
+  var records = [];               // [{ gen, txt, pts }] cada vez que sube el mejor puntaje
+  var revisadas = 0;              // palabras medidas en total (todas las generaciones)
+  var verHistoria = false;        // la pestaña "Historia" está abierta
 
   var visible = false;
   var temporizador = null;
@@ -83,14 +96,17 @@
   var elSigGen = document.getElementById("obj-siggen");
   var elVerCruce = document.getElementById("obj-vercruce");
   var elCam = document.getElementById("obj-camara");
+  var elAzar = document.getElementById("obj-azar");
+  var elTabs = document.getElementById("obj-tabs");
+  var elHistoria = document.getElementById("obj-historia");
 
   /* ---------- utilidades ---------- */
   function letraAlAzar() { return ALFABETO[Math.floor(Math.random() * ALFABETO.length)]; }
 
   function azar() {
-    var s = "", org = [];
-    for (var i = 0; i < objetivo.length; i++) { s += letraAlAzar(); org.push("ini"); }
-    return { txt: s, org: org };
+    var s = "", org = [], hist = [], nace = { gen: generacion, tipo: "inicial" };
+    for (var i = 0; i < objetivo.length; i++) { s += letraAlAzar(); org.push("ini"); hist.push(nace); }
+    return { txt: s, org: org, hist: hist };
   }
 
   function puntaje(ind) {
@@ -157,7 +173,11 @@
   function cruzar(p1, p2, corte) {       // cruce en un punto: comienzo de p1 + final de p2
     var org = [];
     for (var i = 0; i < objetivo.length; i++) org.push(i < corte ? "p1" : "p2");
-    return { txt: p1.txt.slice(0, corte) + p2.txt.slice(corte), org: org };
+    return {
+      txt: p1.txt.slice(0, corte) + p2.txt.slice(corte),
+      org: org,
+      hist: p1.hist.slice(0, corte).concat(p2.hist.slice(corte))   // cada letra trae su historia
+    };
   }
 
   function mutar(hijo) {                 // cada letra cambia con probabilidad "mutacion"
@@ -167,6 +187,9 @@
         var antes = letras[i];
         letras[i] = letraAlAzar();          // puede salir la misma letra: igual cuenta como mutación
         hijo.org[i] = "mut";
+        // si salió una letra distinta, nace aquí (en la generación que se está armando);
+        // si salió la misma, la letra no cambió y conserva su historia
+        if (letras[i] !== antes) hijo.hist[i] = { gen: generacion + 1, tipo: "mutación" };
         cambios.push({ i: i, de: antes, a: letras[i] });
       }
     }
@@ -177,7 +200,7 @@
   function copiaElite(ind) {
     var org = [];
     for (var i = 0; i < ind.txt.length; i++) org.push("elite");
-    return { txt: ind.txt, org: org, elite: true };
+    return { txt: ind.txt, org: org, hist: ind.hist, elite: true };
   }
 
   /* ---------- un turno de evolución ---------- */
@@ -200,11 +223,18 @@
 
     poblacion = nueva;                            // 5. repetir con la nueva generación
     generacion++;
+    revisadas += poblacion.length;
 
     // ---- condiciones de parada ----
-    var mejor = 0;
-    for (var k = 0; k < poblacion.length; k++) mejor = Math.max(mejor, puntaje(poblacion[k]));
-    if (mejor > mejorAnt) { mejorAnt = mejor; ultimaMejora = generacion; }
+    var mejor = 0, quien = 0;
+    for (var k = 0; k < poblacion.length; k++) {
+      var f = puntaje(poblacion[k]);
+      if (f > mejor) { mejor = f; quien = k; }
+    }
+    if (mejor > mejorAnt) {
+      mejorAnt = mejor; ultimaMejora = generacion;
+      records.push({ gen: generacion, txt: poblacion[quien].txt, pts: mejor });   // nuevo récord
+    }
     if (mejor >= objetivo.length) {
       ganado = true;                                   // encontró la palabra
     } else if (generacion - ultimaMejora >= limiteSinMejora()) {
@@ -237,6 +267,7 @@
     elEstado.textContent = textoEstado();
     // los botones de paso a paso solo tienen sentido con la demo detenida
     elPasos.hidden = corriendo() || ganado;
+    elTabs.hidden = !ganado;                          // la historia existe cuando hay ganadora
     elSigGen.disabled = !!barrido;
     elVerCruce.disabled = !!barrido;
   }
@@ -277,8 +308,153 @@
     elMain.style.setProperty("--n", objetivo.length);    // las fichas se achican con el largo
     elMain.dataset.largo = objetivo.length > 14 ? "l" : objetivo.length > 10 ? "m" : "s";
     elFilas.innerHTML = html;
+    pintarAzar();
     actualizarEstado();
   }
+
+  /* =========================================================
+     COMPARACIÓN CON PROBAR AL AZAR
+     ========================================================= */
+  var SUP = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+  function superindice(n) { return String(n).split("").map(function (d) { return SUP[+d]; }).join(""); }
+
+  function miles(n) {                    // 12345 → "12.345" (como se escribe en Colombia)
+    return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
+  function decimal(x) {                  // 3 cifras significativas, coma decimal
+    var t = x >= 100 ? Math.round(x) : x >= 10 ? Math.round(x * 10) / 10 : Math.round(x * 100) / 100;
+    return String(t).replace(".", ",");
+  }
+
+  /* 28^L en palabras hasta los billones (escala larga: 1 billón = 10¹²),
+     y con notación ×10ⁿ más allá */
+  function cantidadLegible(base, L) {
+    var log = L * Math.log10(base);
+    if (log < 3) return miles(Math.pow(base, L));
+    if (log < 15) {
+      var v = Math.pow(base, L);
+      var unidades = [[1e12, "billón", "billones"], [1e9, "mil millones", "mil millones"],
+                      [1e6, "millón", "millones"], [1e3, "mil", "mil"]];
+      for (var u = 0; u < unidades.length; u++) {
+        if (v >= unidades[u][0]) {
+          var m = decimal(v / unidades[u][0]);
+          return m + " " + (m === "1" ? unidades[u][1] : unidades[u][2]);
+        }
+      }
+    }
+    var exp = Math.floor(log);
+    return decimal(Math.pow(10, log - exp)) + " × 10" + superindice(exp);
+  }
+
+  function pintarAzar() {
+    var L = objetivo.length;
+    var txt = "Probando al azar habría <b>28" + superindice(L) + "</b> combinaciones (≈ " +
+      cantidadLegible(28, L) + ")";
+    // comparación verificada: se estiman entre 10²² y 10²⁴ estrellas en el universo observable
+    // (solo por encima de 10²⁵, para que la comparación sea cierta con cualquier estimación)
+    var estrellas = L * Math.log10(28) > 25;
+    if (estrellas) txt += ": más que estrellas en el universo observable";
+    txt += ". El algoritmo revisó <b>" + miles(revisadas) + "</b> palabras.";
+    elAzar.innerHTML = txt;
+    elAzar.title = estrellas ? "Se estiman entre 10²² y 10²⁴ estrellas en el universo observable." : "";
+  }
+
+  /* =========================================================
+     HISTORIA DE LA PALABRA GANADORA
+     ========================================================= */
+  function ganadora() {
+    for (var i = 0; i < poblacion.length; i++) if (poblacion[i].txt === objetivo) return poblacion[i];
+    return null;
+  }
+
+  function fraseLetra(letra, h) {
+    var l = letra === " " ? "El espacio" : letra;
+    if (h.tipo === "mutación") {
+      return l + ": apareció por mutación en la generación " + h.gen + " y se heredó desde ahí.";
+    }
+    return h.gen === 0
+      ? l + ": ya estaba en una palabra al azar de la población inicial."
+      : l + ": llegó en una palabra al azar agregada en la generación " + h.gen + ".";
+  }
+
+  /* hasta 5 récords (4 con frases largas): siempre el primero y el último,
+     el resto bien repartido, para que la slide no se sature */
+  function recordsVisibles() {
+    var max = objetivo.length > 10 ? 4 : 5;
+    if (records.length <= max) return records.slice();
+    var out = [];
+    for (var k = 0; k < max; k++) out.push(records[Math.round(k * (records.length - 1) / (max - 1))]);
+    return out;
+  }
+
+  function pintarHistoria() {
+    var gana = ganadora();
+    if (!gana) { elHistoria.innerHTML = ""; return; }
+    var L = objetivo.length, vis = recordsVisibles(), html = "";
+
+    html += '<div class="hist-tit">Así se formó la palabra: la mejor de cada momento' +
+      (vis.length < records.length ? " <small>(" + vis.length + " de " + records.length + " récords)</small>" : "") +
+      "</div><div class=\"hist-linea\">";
+    vis.forEach(function (r, k) {
+      var prev = k > 0 ? vis[k - 1].txt : null, celdas = "";
+      for (var c = 0; c < L; c++) {
+        var ok = r.txt[c] === objetivo[c];
+        var nueva = ok && prev !== null && prev[c] !== objetivo[c];   // se volvió correcta aquí
+        celdas += '<span class="' + (ok ? "ok" : "") + (nueva ? " nueva" : "") + (r.txt[c] === " " ? " esp" : "") +
+          '">' + (r.txt[c] === " " ? "␣" : r.txt[c]) + "</span>";
+      }
+      html += '<div class="cam-fila hist-rec"><div class="cam-etq">Gen ' + r.gen + "</div>" +
+        '<div class="str">' + celdas + '</div><div class="cam-pts">' + r.pts + "/" + L + "</div></div>";
+    });
+    html += "</div>";
+
+    var nMut = 0, nIni = 0, letras = "";
+    for (var i = 0; i < L; i++) {
+      var h = gana.hist[i];
+      if (h.tipo === "mutación") nMut++; else nIni++;
+      letras += '<button class="hist-letra ' + (h.tipo === "mutación" ? "h-mut" : "h-ini") +
+        '" data-i="' + i + '"><b>' + (gana.txt[i] === " " ? "␣" : gana.txt[i]) + "</b><small>" +
+        (h.tipo === "mutación" ? "mut. " + h.gen : h.gen === 0 ? "azar" : "azar " + h.gen) +
+        "</small></button>";
+    }
+    html += '<div class="hist-tit">De dónde salió cada letra <small>(pulse una letra)</small></div>' +
+      '<div class="hist-letras">' + letras + "</div>" +
+      '<p class="hist-frase" id="obj-hist-frase">' + fraseLetra(gana.txt[0], gana.hist[0]) + "</p>" +
+      '<p class="hist-resumen"><b>' + nIni + "</b> " + (nIni === 1 ? "letra ya venía" : "letras ya venían") +
+      " de palabras al azar y <b>" + nMut + "</b> " + (nMut === 1 ? "apareció" : "aparecieron") +
+      " por mutación. La selección y el cruce las conservaron y las juntaron en una sola palabra.</p>";
+    elHistoria.innerHTML = html;
+  }
+
+  elHistoria.addEventListener("click", function (e) {
+    var b = e.target.closest(".hist-letra");
+    var gana = ganadora();
+    if (!b || !gana) return;
+    b.blur();
+    var i = +b.dataset.i;
+    document.getElementById("obj-hist-frase").textContent = fraseLetra(gana.txt[i], gana.hist[i]);
+    Array.prototype.forEach.call(elHistoria.querySelectorAll(".hist-letra"), function (x) {
+      x.classList.toggle("sel", x === b);
+    });
+  });
+
+  function mostrarHistoria(v) {
+    verHistoria = v && ganado;
+    elMain.classList.toggle("en-historia", verHistoria);
+    elHistoria.hidden = !verHistoria;
+    if (verHistoria) { cerrarCamara(); pintarHistoria(); }
+    Array.prototype.forEach.call(elTabs.querySelectorAll("button"), function (b) {
+      b.classList.toggle("on", (b.dataset.tab === "historia") === verHistoria);
+    });
+  }
+
+  elTabs.addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    b.blur();
+    mostrarHistoria(b.dataset.tab === "historia");
+  });
 
   /* =========================================================
      MODO PASO A PASO
@@ -521,7 +697,8 @@
       ajustarMutacionAuto();
       // la meta cambió: se limpian las condiciones de parada
       ganado = false; estancado = false;
-      mejorAnt = 0; ultimaMejora = generacion;
+      mostrarHistoria(false);
+      empezarRecords();                               // los récords de la meta vieja ya no aplican
       pintar();
       if (!temporizador) correr();                    // seguimos si estaba en marcha
     }
@@ -579,12 +756,21 @@
 
   /* el objetivo cambió de largo: cada palabra se recorta o se completa al azar */
   function ajustarLargo() {
-    var L = objetivo.length;
+    var L = objetivo.length, nace = { gen: generacion, tipo: "inicial" };
     poblacion = poblacion.map(function (ind) {
-      var txt = ind.txt.slice(0, L), org = ind.org.slice(0, L);
-      while (txt.length < L) { txt += letraAlAzar(); org.push("ini"); }
-      return { txt: txt, org: org };
+      var txt = ind.txt.slice(0, L), org = ind.org.slice(0, L), hist = ind.hist.slice(0, L);
+      while (txt.length < L) { txt += letraAlAzar(); org.push("ini"); hist.push(nace); }
+      return { txt: txt, org: org, hist: hist };
     });
+  }
+
+  /* el primer récord es la mejor palabra del momento (gen 0 o al cambiar la meta) */
+  function empezarRecords() {
+    var pts = poblacion.map(puntaje), o = ordenar(pts);
+    mejorAnt = pts[o[0]];
+    ultimaMejora = generacion;
+    records = [{ gen: generacion, txt: poblacion[o[0]].txt, pts: mejorAnt }];
+    if (mejorAnt >= objetivo.length) { ganado = true; pararReloj(); }   // ¡ya estaba! (p. ej. al acortar la meta)
   }
 
   function reiniciar() {
@@ -594,8 +780,10 @@
     poblacion = [];
     for (var i = 0; i < +elPob.value; i++) poblacion.push(azar());
     generacion = 0;
+    revisadas = poblacion.length;                     // la población inicial también se mide
     ganado = false; estancado = false;
-    mejorAnt = 0; ultimaMejora = 0;
+    mostrarHistoria(false);
+    empezarRecords();
     pintar();
   }
 

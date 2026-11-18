@@ -309,9 +309,14 @@
           <div class="stat"><b id="obj-prom">0</b><span>Promedio</span></div>
           <div class="stat estado"><b id="obj-estado">Listo para iniciar</b><span>Estado</span></div>
         </div>
+        <p class="azar" id="obj-azar"></p>
       </div>
       <div class="demo-main" id="obj-main">
         <div class="pal-barra">
+          <div class="tabs" id="obj-tabs" hidden>
+            <button class="on" data-tab="poblacion">Población</button>
+            <button data-tab="historia">📜 Ver la historia</button>
+          </div>
           <div class="pasos-btns" id="obj-pasos">
             <button class="btn" id="obj-siggen">⏭ Siguiente generación</button>
             <button class="btn" id="obj-vercruce">🔍 Ver un cruce en cámara lenta</button>
@@ -329,6 +334,7 @@
         <p id="obj-frase"></p>
         <div id="obj-filas"></div>
         <div class="cam" id="obj-camara" hidden></div>
+        <div class="historia" id="obj-historia" hidden></div>
         <p class="hint"><b>Qué observar:</b> las letras en <b>verde</b> ya están en su lugar. Se detiene
         sola al encontrar la palabra, o si pasa mucho tiempo sin mejorar. Cambie el objetivo mientras corre.</p>
       </div>
