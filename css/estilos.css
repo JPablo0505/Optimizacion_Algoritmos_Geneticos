@@ -598,6 +598,30 @@ canvas{
 .leyenda i.lg-estanca{background:rgba(249,161,44,.3);width:1.1rem;height:.9rem;border-radius:.2rem}
 .curva-ley{margin-bottom:.35rem;gap:.2rem .8rem}
 .graf-lado .chart-label{margin-bottom:.2rem}
+
+/* ---------- mapa real (proporción del Valle de Aburrá: 600 × 701) ----------
+   El alto manda: el mapa ocupa todo el alto disponible y su ancho sale de la proporción. */
+.mapa-wrap.mapa-real{aspect-ratio:600 / 701;width:100%;max-width:calc((100vh - 20.5rem) * 600 / 701);max-width:calc((100dvh - 20.5rem) * 600 / 701)}
+.demo-body.viaje{grid-template-columns:auto minmax(0,1fr);gap:1.3rem}
+.demo-body.viaje .mapa-real{width:calc((100vh - 20.5rem) * 600 / 701);width:calc((100dvh - 20.5rem) * 600 / 701);max-width:46vw}
+.leyenda.sobre-mapa{flex-direction:column;align-items:flex-start}
+.graf-lado .ctrls.compacto .ctl{padding:.45rem .9rem .5rem}
+.curva-ley b{font-size:1rem;color:var(--muted)}
+.credito{font-size:.95rem;color:var(--soft);line-height:1.35;margin:0}
+#slide-demo-viajero .graf-lado{gap:.55rem}
+
+/* slide 12: mapa grande a la izquierda; galería y controles a la derecha */
+#slide-demo-ruta .ruta-contenido{display:grid;grid-template-columns:auto minmax(0,1fr);gap:1.3rem;align-items:start}
+#slide-demo-ruta .ruta-contenido[hidden]{display:none}
+#slide-demo-ruta .ruta-mapa{width:calc((100vh - 19rem) * 600 / 701);width:calc((100dvh - 19rem) * 600 / 701);max-width:44vw}
+#slide-demo-ruta .ruta-lado{gap:.6rem}
+#slide-demo-ruta .ctrls{align-items:center}
+#slide-demo-ruta .galeria{display:grid;grid-template-columns:repeat(2,minmax(0,1fr)) minmax(0,1.25fr);grid-auto-rows:auto;gap:.6rem;align-items:stretch}
+#slide-demo-ruta .foto{max-width:none;align-items:center}
+#slide-demo-ruta .foto canvas{width:auto;height:calc((100vh - 19rem) * .21);max-width:100%}
+#slide-demo-ruta .foto.ganadora{grid-column:3;grid-row:1 / span 2}
+#slide-demo-ruta .foto.ganadora canvas{height:calc((100vh - 19rem) * .48)}
+#slide-demo-ruta .foto-pie{text-align:center}
 .leyenda i.lg-verde{background:var(--c-ok);height:.35rem;width:1.6rem;border-radius:1rem}
 
 .srow .f{color:var(--amber);font-weight:800;text-align:right;font-size:1.3rem;font-variant-numeric:tabular-nums}

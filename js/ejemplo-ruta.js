@@ -52,7 +52,7 @@
   var actual = 0;                 // índice de la instantánea que se ve en el mapa grande
   var anim = null;                // requestAnimationFrame de la moto
   var t0 = 0;
-  var recorrido = null;           // { puntos, acum, total } de la ruta que recorre la moto
+  var recorrido = null;           // { xs, ys, acum, llegadas, total } de la ruta que recorre la moto
 
   function pct(d0, d) { return Math.round((d0 - d) / d0 * 100); }
 
@@ -87,12 +87,11 @@
   function dibujarRuta(g, ciudades, ruta, ancho) {
     if (!ruta || !ruta.length) return;
     g.beginPath();
-    for (var i = 0; i < ruta.length; i++) {
-      var p = ciudades[ruta[i]];
-      if (i === 0) g.moveTo(p.x, p.y); else g.lineTo(p.x, p.y);
+    for (var i = 0; i < ruta.length; i++) {        // cada tramo sigue las calles reales
+      window.Mapa.trazarCamino(g, ciudades[ruta[i]].p, ciudades[ruta[(i + 1) % ruta.length]].p, i === 0);
     }
-    g.closePath();
     g.lineJoin = "round";
+    g.lineCap = "round";
     g.strokeStyle = "rgba(255,255,255,.9)";
     g.lineWidth = ancho + 3;
     g.stroke();
@@ -116,10 +115,10 @@
       var c = document.createElement("canvas");
       var esc = esGana ? 0.42 : 0.32;                // la ganadora se ve más grande
       var g = prepararCanvas(c, W * esc, H * esc);
-      g.drawImage(R.planoLimpio, 0, 0, W * esc, H * esc);
+      g.drawImage(R.fondo, 0, 0, W * esc, H * esc);
       g.scale(esc, esc);
       dibujarRuta(g, datos.ciudades, f.ruta, esGana ? 5 : 6);
-      window.Plano.pines(g, datos.ciudades, {});
+      window.Mapa.pines(g, datos.ciudades, {});
       card.appendChild(c);
       var pie = document.createElement("span");
       pie.className = "foto-pie";
@@ -145,7 +144,7 @@
     elTiempo.value = i;
     var f = datos.fotos[i], d0 = datos.fotos[0].d;
     fctx.clearRect(0, 0, W, H);
-    fctx.drawImage(R.plano, 0, 0, W, H);
+    fctx.drawImage(R.fondo, 0, 0, W, H);
     dibujarRuta(fctx, datos.ciudades, f.ruta, 3.6);
     recorrido = prepararRecorrido(f.ruta);
     dibujarMoto(0);
@@ -161,14 +160,21 @@
   elTiempo.addEventListener("input", function () { mostrar(+this.value); });
 
   /* ---------- la moto ---------- */
+  /* el camino completo de la moto: los tramos por calle, uno tras otro, y de vuelta a la Bodega.
+     "llegadas" guarda en qué punto del recorrido llega a cada barrio */
   function prepararRecorrido(ruta) {
-    var pts = ruta.map(function (k) { return { x: datos.ciudades[k].x, y: datos.ciudades[k].y, k: k }; });
-    pts.push(pts[0]);                                  // vuelve a la Bodega
-    var acum = [0];
-    for (var i = 1; i < pts.length; i++) {
-      acum.push(acum[i - 1] + Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y));
+    var xs = [], ys = [], acum = [], llegadas = [];
+    for (var i = 0; i < ruta.length; i++) {
+      var a = datos.ciudades[ruta[i]], b = datos.ciudades[ruta[(i + 1) % ruta.length]];
+      var c = window.Mapa.camino(a.p, b.p);
+      for (var k = xs.length ? 2 : 0; k < c.length; k += 2) {
+        var x = c[k], y = c[k + 1];
+        acum.push(xs.length ? acum[acum.length - 1] + Math.hypot(x - xs[xs.length - 1], y - ys[ys.length - 1]) : 0);
+        xs.push(x); ys.push(y);
+      }
+      llegadas.push({ d: acum[acum.length - 1], k: ruta[(i + 1) % ruta.length] });
     }
-    return { puntos: pts, acum: acum, total: acum[acum.length - 1] };
+    return { xs: xs, ys: ys, acum: acum, llegadas: llegadas, total: acum[acum.length - 1] };
   }
 
   /* dibuja barrios (visitados en verde con ✓), nombres y la moto en la fracción t del camino */
@@ -179,17 +185,17 @@
     var dist = t * rc.total, seg = 1;
     while (seg < rc.acum.length - 1 && rc.acum[seg] < dist) seg++;
     var visitados = {}, n = 0;
-    for (var i = 1; i < rc.puntos.length - 1; i++) {
-      if (rc.acum[i] <= dist && t > 0) { visitados[rc.puntos[i].k] = true; n++; }
+    for (var i = 0; i < rc.llegadas.length - 1; i++) {   // la última llegada es la Bodega
+      if (rc.llegadas[i].d <= dist && t > 0) { visitados[rc.llegadas[i].k] = true; n++; }
     }
-    window.Plano.pines(mctx, datos.ciudades, { visitados: visitados });
-    window.Plano.etiquetas(mctx, datos.ciudades, etiquetas, null, W);
+    window.Mapa.pines(mctx, datos.ciudades, { visitados: visitados });
+    window.Mapa.etiquetas(mctx, datos.ciudades, etiquetas, null, W);
 
-    var a = rc.puntos[seg - 1], b = rc.puntos[seg];
+    // la moto avanza por la calle: punto del tramo [seg-1, seg] de la polilínea
+    var ax = rc.xs[seg - 1], ay = rc.ys[seg - 1], bx = rc.xs[seg], by = rc.ys[seg];
     var largo = (rc.acum[seg] - rc.acum[seg - 1]) || 1;
     var u = Math.min(1, Math.max(0, (dist - rc.acum[seg - 1]) / largo));
-    var x = a.x + (b.x - a.x) * u, y = a.y + (b.y - a.y) * u;
-    moto(mctx, x, y, Math.atan2(b.y - a.y, b.x - a.x));
+    moto(mctx, ax + (bx - ax) * u, ay + (by - ay) * u, Math.atan2(by - ay, bx - ax));
     return n;
   }
 
@@ -207,9 +213,9 @@
     g.fillStyle = "#fff";
     g.beginPath(); g.arc(-11, 5, 1.8, 0, Math.PI * 2); g.arc(12, 5, 1.8, 0, Math.PI * 2); g.fill();
     g.fillStyle = "#026937";                          // cuerpo
-    window.Plano.redondeado(g, -12, -4, 26, 8, 3); g.fill();
+    window.Mapa.redondeado(g, -12, -4, 26, 8, 3); g.fill();
     g.fillStyle = "#f9a12c";                          // caja del pedido
-    window.Plano.redondeado(g, -21, -15, 13, 12, 2); g.fill();
+    window.Mapa.redondeado(g, -21, -15, 13, 12, 2); g.fill();
     g.strokeStyle = "#a55f00"; g.lineWidth = 1; g.stroke();
     g.fillStyle = "#08281a";                          // conductor
     g.beginPath(); g.arc(1, -11, 4.6, 0, Math.PI * 2); g.fill();
@@ -270,7 +276,7 @@
       return;
     }
     datos = {
-      ciudades: e.ciudades.map(function (c) { return { x: c.x, y: c.y, nombre: c.nombre, bodega: c.bodega }; }),
+      ciudades: e.ciudades.map(function (c) { return { p: c.p, x: c.x, y: c.y, nombre: c.nombre, bodega: c.bodega }; }),
       fotos: e.fotos.slice(),
       genBase: e.genBase
     };
@@ -282,7 +288,7 @@
         "barrios no hubo nada que mejorar. Pruebe con más barrios."
       : "De <strong>" + R.km(f0.d) + "</strong> a <strong>" + R.km(fN.d) + "</strong>: " +
         "<strong>" + pct(f0.d, fN.d) + " % más corta</strong> en " + genRel(fN) + " generaciones " +
-        "<small>(km a escala ilustrativa)</small>.";
+        "<small>(km reales por las vías principales)</small>.";
     if (e.cambioMapa) {
       elNota.hidden = false;
       elNota.textContent = "El mapa cambió en la generación " + e.cambioMapa.gen +
@@ -295,7 +301,7 @@
     pintarGaleria();
     mostrar(actual);
     // las etiquetas se ubican cuando el mapa ya tiene tamaño en pantalla
-    etiquetas = window.Plano.ubicarEtiquetas(mctx, datos.ciudades, W, H, null, window.Plano.tamEtiqueta(elMoto, W));
+    etiquetas = window.Mapa.ubicarEtiquetas(mctx, datos.ciudades, W, H, null, window.Mapa.tamEtiqueta(elMoto, W));
     dibujarMoto(0);
   }
 

@@ -349,8 +349,8 @@
       <span class="kicker">Ejemplo 2 en vivo</span>
       <h2>El repartidor, evolucionando</h2>
     </div>
-    <p class="lead">El repartidor sale de la <strong>Bodega</strong>, visita todos los barrios y vuelve.
-    La línea verde es la <strong>mejor ruta</strong> encontrada.</p>
+    <p class="lead">El repartidor sale de la <strong>Bodega</strong>, visita todos los barrios del Valle de
+    Aburrá y vuelve. La línea verde es la <strong>mejor ruta</strong> encontrada.</p>
   </div>
   <div class="demo">
     <div class="demo-head">
@@ -362,50 +362,42 @@
       </div>
     </div>
 
-    <div class="ctrls fila">
-      <div class="ctl">
-        <label for="via-ciudades">Cantidad de barrios</label>
-        <div class="rowval"><input type="range" id="via-ciudades" min="6" max="36" step="1" value="24">
-          <output id="val-ciudades">24</output></div>
-      </div>
-      <div class="ctl">
-        <label for="via-pob">Tamaño de la población</label>
-        <div class="rowval"><input type="range" id="via-pob" min="40" max="300" step="20" value="120">
-          <output id="val-viapob">120</output></div>
-      </div>
-      <div class="ctl">
-        <label for="via-mut">Mutación</label>
-        <div class="rowval"><input type="range" id="via-mut" min="0" max="80" step="5" value="35">
-          <output id="val-viamut">35%</output></div>
-      </div>
-      <div class="ctl">
-        <label for="via-vel">Velocidad</label>
-        <div class="rowval"><select id="via-vel">
-          <option value="300">Lenta</option>
-          <option value="120" selected>Normal</option>
-          <option value="45">Rápida</option>
-        </select></div>
-      </div>
-    </div>
-
     <div class="demo-body viaje">
-      <div class="mapa-col">
-        <div class="mapa-wrap">
-          <canvas id="plano" width="760" height="400" aria-hidden="true"></canvas>
-          <canvas id="ciudades" width="760" height="400"
-                  aria-label="Plano con los barrios y la mejor ruta"></canvas>
-          <div class="leyenda sobre-mapa" id="via-leyenda">
-            <span><i class="lg-verde"></i>Verde: mejor ruta</span>
-            <span><i class="lg-gris"></i>Gris: otras rutas de la población</span>
-          </div>
-        </div>
-        <div class="mapa-pie">
-          <label class="sw"><input type="checkbox" id="via-verpob" checked>
-            <span>Mostrar la población</span></label>
-          <span class="mapa-ayuda">Clic: agrega un barrio · clic en uno: lo quita · arrastrar: lo mueve</span>
+      <div class="mapa-wrap mapa-real">
+        <canvas id="plano" width="600" height="701" aria-hidden="true"></canvas>
+        <canvas id="ciudades" width="600" height="701"
+                aria-label="Mapa del Valle de Aburrá con los barrios y la mejor ruta"></canvas>
+        <div class="leyenda sobre-mapa" id="via-leyenda">
+          <span><i class="lg-verde"></i>Verde: mejor ruta</span>
+          <span><i class="lg-gris"></i>Gris: otras rutas de la población</span>
         </div>
       </div>
       <div class="graf-lado">
+        <div class="ctrls compacto">
+          <div class="ctl">
+            <label for="via-ciudades">Cantidad de barrios</label>
+            <div class="rowval"><input type="range" id="via-ciudades" min="6" max="36" step="1" value="24">
+              <output id="val-ciudades">24</output></div>
+          </div>
+          <div class="ctl">
+            <label for="via-pob">Tamaño de la población</label>
+            <div class="rowval"><input type="range" id="via-pob" min="40" max="300" step="20" value="120">
+              <output id="val-viapob">120</output></div>
+          </div>
+          <div class="ctl">
+            <label for="via-mut">Mutación</label>
+            <div class="rowval"><input type="range" id="via-mut" min="0" max="80" step="5" value="35">
+              <output id="val-viamut">35%</output></div>
+          </div>
+          <div class="ctl">
+            <label for="via-vel">Velocidad</label>
+            <div class="rowval"><select id="via-vel">
+              <option value="300">Lenta</option>
+              <option value="120" selected>Normal</option>
+              <option value="45">Rápida</option>
+            </select></div>
+          </div>
+        </div>
         <div class="stats cuatro">
           <div class="stat"><b id="via-gen">0</b><span>Generación</span></div>
           <div class="stat"><b id="via-mejor">-</b><span>Mejor ruta</span></div>
@@ -414,15 +406,22 @@
           <div class="stat estado"><b id="via-estado">Listo para iniciar</b><span>Estado</span></div>
         </div>
         <div class="curva-lado">
-          <div class="chart-label">Distancia por generación</div>
           <div class="leyenda curva-ley">
+            <b>Distancia por generación:</b>
             <span><i class="lg-verde"></i>mejor</span>
-            <span><i class="lg-prom"></i>promedio de la población</span>
+            <span><i class="lg-prom"></i>promedio</span>
             <span><i class="lg-record"></i>récord</span>
             <span><i class="lg-estanca"></i>estancado</span>
           </div>
-          <canvas id="curva" width="520" height="210"></canvas>
+          <canvas id="curva" width="700" height="125"></canvas>
         </div>
+        <div class="mapa-pie">
+          <label class="sw"><input type="checkbox" id="via-verpob" checked>
+            <span>Mostrar la población</span></label>
+          <span class="mapa-ayuda">Clic en el mapa: agrega el barrio más cercano · clic en un barrio: lo quita</span>
+        </div>
+        <p class="credito">Mapa real: © colaboradores de OpenStreetMap · distancias por las vías principales
+        (sin sentidos viales)</p>
       </div>
     </div>
   </div>
@@ -446,26 +445,25 @@
       <button class="btn primary" id="ruta-volver">← Ir al ejemplo del repartidor</button>
     </div>
     <div class="ruta-contenido" id="ruta-contenido">
-      <div class="galeria" id="ruta-galeria" aria-label="La mejor ruta en distintos momentos"></div>
-      <div class="ruta-cuerpo">
-        <div class="mapa-wrap ruta-mapa">
-          <canvas id="ruta-fondo" width="760" height="400" aria-hidden="true"></canvas>
-          <canvas id="ruta-moto" width="760" height="400"
-                  aria-label="La moto de reparto recorre la ruta ganadora"></canvas>
+      <div class="mapa-wrap mapa-real ruta-mapa">
+        <canvas id="ruta-fondo" width="600" height="701" aria-hidden="true"></canvas>
+        <canvas id="ruta-moto" width="600" height="701"
+                aria-label="La moto de reparto recorre la ruta ganadora por las calles"></canvas>
+      </div>
+      <div class="ruta-lado">
+        <div class="galeria" id="ruta-galeria" aria-label="La mejor ruta en distintos momentos"></div>
+        <div class="ctrls">
+          <button class="btn primary" id="ruta-play">▶ Recorrer la ruta ganadora</button>
+          <button class="btn" id="ruta-repetir">↻ Repetir</button>
+          <span class="ruta-recorrido" id="ruta-recorrido" aria-live="polite"></span>
         </div>
-        <div class="ruta-lado">
-          <div class="ctrls">
-            <button class="btn primary" id="ruta-play">▶ Recorrer la ruta ganadora</button>
-            <button class="btn" id="ruta-repetir">↻ Repetir</button>
-          </div>
-          <p class="ruta-recorrido" id="ruta-recorrido" aria-live="polite"></p>
-          <div class="ctl">
-            <label for="ruta-tiempo">Línea de tiempo: mueva para rebobinar la evolución</label>
-            <input type="range" id="ruta-tiempo" min="0" max="1" step="1" value="1">
-          </div>
-          <p class="ruta-tiempo-txt" id="ruta-tiempo-txt"></p>
-          <p class="hint">Cada mini-mapa es la mejor ruta de ese momento. Pulse uno para verlo en grande.</p>
+        <div class="ctl">
+          <label for="ruta-tiempo">Línea de tiempo: mueva para rebobinar la evolución</label>
+          <input type="range" id="ruta-tiempo" min="0" max="1" step="1" value="1">
         </div>
+        <p class="ruta-tiempo-txt" id="ruta-tiempo-txt"></p>
+        <p class="credito">Pulse un mini-mapa para verlo en grande · © colaboradores de OpenStreetMap ·
+        distancias por las vías principales (sin sentidos viales)</p>
       </div>
     </div>
   </div>
@@ -603,7 +601,8 @@ mejor_ruta, mejor_d = <span class="k">None</span>, <span class="k">None</span>
 <script src="js/navegacion.js"></script>
 <script src="js/animaciones.js"></script>
 <script src="js/ciclo.js"></script>
-<script src="js/plano.js"></script>
+<script src="js/datos-mapa.js"></script>
+<script src="js/mapa.js"></script>
 <script src="js/ejemplo-palabra.js"></script>
 <script src="js/ejemplo-viajero.js"></script>
 <script src="js/ejemplo-ruta.js"></script>
