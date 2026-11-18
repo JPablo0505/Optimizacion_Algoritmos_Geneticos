@@ -276,23 +276,16 @@
 
     <div class="demo-body palabra">
       <div class="demo-side">
-        <div class="ctrls vert">
-          <div class="ctl">
-            <label for="obj-palabra">Palabra o frase objetivo <small>(hasta 20)</small></label>
+        <div class="ctrls compacto">
+          <div class="ctl ancho">
+            <label for="obj-palabra">Palabra o frase objetivo <small>(hasta 20, con espacios)</small></label>
             <input type="text" id="obj-palabra" value="GENETICA" maxlength="20"
                    autocomplete="off" spellcheck="false">
           </div>
           <div class="ctl">
-            <label for="obj-pob">Tamaño de la población</label>
+            <label for="obj-pob">Población</label>
             <div class="rowval"><input type="range" id="obj-pob" min="10" max="150" step="5" value="40">
               <output id="val-pob">40</output></div>
-          </div>
-          <div class="ctl">
-            <label for="obj-mut">Mutación <small>(por letra)</small></label>
-            <div class="rowval"><input type="range" id="obj-mut" min="0" max="15" step="0.5" value="12.5">
-              <output id="val-mut">12,5%</output></div>
-            <label class="sw"><input type="checkbox" id="obj-mutauto" checked>
-              <span>Mutación automática <small>(≈ 1 letra por palabra)</small></span></label>
           </div>
           <div class="ctl">
             <label for="obj-vel">Velocidad</label>
@@ -302,8 +295,15 @@
               <option value="40">Rápida</option>
             </select></div>
           </div>
+          <div class="ctl ancho">
+            <label for="obj-mut">Mutación <small>(probabilidad de cambiar cada letra)</small></label>
+            <div class="rowval"><input type="range" id="obj-mut" min="0" max="15" step="0.5" value="12.5">
+              <output id="val-mut">12,5%</output></div>
+            <label class="sw"><input type="checkbox" id="obj-mutauto" checked>
+              <span>Mutación automática <small>(≈ 1 letra por palabra)</small></span></label>
+          </div>
         </div>
-        <div class="stats">
+        <div class="stats tres">
           <div class="stat"><b id="obj-gen">0</b><span>Generación</span></div>
           <div class="stat"><b id="obj-mejor">0/8</b><span>Mejor puntaje</span></div>
           <div class="stat"><b id="obj-prom">0</b><span>Promedio</span></div>
@@ -311,11 +311,20 @@
         </div>
       </div>
       <div class="demo-main">
+        <div class="pal-barra">
+          <label class="sw"><input type="checkbox" id="obj-origen">
+            <span>Ver de dónde viene cada letra</span></label>
+        </div>
+        <div class="leyenda" id="obj-leyenda" hidden>
+          <span><i class="lg-ok"></i>letra correcta</span>
+          <span><i class="lg-p1"></i>del padre 1</span>
+          <span><i class="lg-p2"></i>del padre 2</span>
+          <span><i class="lg-mut"></i>mutación</span>
+          <span><em class="et-elite">élite</em>pasó intacta</span>
+        </div>
         <div id="obj-filas"></div>
-        <p class="hint"><b>Qué observar:</b> las letras en <b>verde</b> ya están en su lugar. Todavía no
-        corre: pulse <b>Empezar</b> cuando quiera. <b>Se detiene solo</b> cuando encuentra la palabra;
-        si pasan <b>150 generaciones sin mejorar</b>, también se detiene y lo avisa (pruebe subir la
-        mutación). Cambie la palabra objetivo mientras corre y la población se adapta al momento.</p>
+        <p class="hint"><b>Qué observar:</b> las letras en <b>verde</b> ya están en su lugar. Se detiene
+        sola al encontrar la palabra, o si pasa mucho tiempo sin mejorar. Cambie el objetivo mientras corre.</p>
       </div>
     </div>
   </div>

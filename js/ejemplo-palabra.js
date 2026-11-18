@@ -6,6 +6,15 @@
    Alfabeto: 27 letras + el espacio = 28 símbolos. La entrada
    se normaliza (mayúsculas, sin tildes, conserva la Ñ).
    Mutación automática: 1 / largo (≈ 1 letra cambiada por hijo).
+
+   Cada individuo es { txt, org } donde org[i] dice de dónde
+   salió la letra i en esta generación:
+     "ini"   → población inicial al azar
+     "p1"    → copiada del padre 1 (el comienzo, antes del corte)
+     "p2"    → copiada del padre 2 (el final, después del corte)
+     "mut"   → cambiada al azar por la mutación
+     "elite" → el individuo entero pasó intacto (elitismo)
+
    Condiciones de parada (como en todo algoritmo genético):
    · encontró la palabra                 → se detiene y lo avisa
    · max(150, 15 × largo) gen. sin mejora → se detiene (estancado)
@@ -16,21 +25,24 @@
 
   var ALFABETO = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ ";   // 28 símbolos (el último es el espacio)
   var LARGO_MAX = 20;
+  var ELITE = 2;
+  var FILAS = 8;                  // palabras visibles (las mejores)
 
   // generaciones sin mejorar antes de detenerse: crece con el largo
   function limiteSinMejora() { return Math.max(150, 15 * objetivo.length); }
 
   var objetivo = "GENETICA";
-  var poblacion = [];
+  var poblacion = [];             // [{ txt, org }]
   var generacion = 0;
-  var mutacion = 1 / 8;          // automática: 1 / largo (12,5 % con GENETICA)
+  var mutacion = 1 / 8;           // automática: 1 / largo (12,5 % con GENETICA)
   var mutAuto = true;             // el interruptor "Mutación automática"
+  var verOrigen = false;          // el interruptor "Ver de dónde viene cada letra"
 
   // máquina de estados
   var arrancado = false;          // el usuario presionó Empezar
   var pausado = false;
   var ganado = false;             // encontró la palabra → condición de parada
-  var estancado = false;          // sin mejora en LIMITE_SIN_MEJORA → condición de parada
+  var estancado = false;          // sin mejora en el límite → condición de parada
   var mejorAnt = 0;
   var ultimaMejora = 0;
 
@@ -45,6 +57,8 @@
   var elValPob = document.getElementById("val-pob");
   var elValMut = document.getElementById("val-mut");
   var elMutAuto = document.getElementById("obj-mutauto");
+  var elOrigen = document.getElementById("obj-origen");
+  var elLeyenda = document.getElementById("obj-leyenda");
   var elPlay = document.getElementById("obj-play");
   var elGen = document.getElementById("obj-gen");
   var elMejor = document.getElementById("obj-mejor");
@@ -54,25 +68,23 @@
   var elFilas = document.getElementById("obj-filas");
 
   /* ---------- utilidades ---------- */
+  function letraAlAzar() { return ALFABETO[Math.floor(Math.random() * ALFABETO.length)]; }
+
   function azar() {
-    var s = "";
-    for (var i = 0; i < objetivo.length; i++) s += ALFABETO[Math.floor(Math.random() * ALFABETO.length)];
-    return s;
+    var s = "", org = [];
+    for (var i = 0; i < objetivo.length; i++) { s += letraAlAzar(); org.push("ini"); }
+    return { txt: s, org: org };
   }
 
-  function puntaje(p) {
-    var f = 0;
+  function puntaje(ind) {
+    var p = ind.txt, f = 0;
     for (var i = 0; i < p.length; i++) if (p[i] === objetivo[i]) f++;
     return f;
   }
 
-  function mejorDe(pob) {
-    var m = 0;
-    for (var i = 0; i < pob.length; i++) {
-      var f = puntaje(pob[i]);
-      if (f > m) m = f;
-    }
-    return m;
+  function ordenar(puntos) {            // índices de mejor a peor
+    return puntos.map(function (_, i) { return i; })
+      .sort(function (a, b) { return puntos[b] - puntos[a]; });
   }
 
   function sorteo(puntajes) {           // torneo de 3: gana el mejor del grupo
@@ -87,9 +99,9 @@
   /* mayúsculas, sin tildes (Á→A, Ü→U), conserva la Ñ, solo letras y espacios */
   function normalizar(txt) {
     return txt.toUpperCase()
-      .replace(/Ñ/g, "")                       // proteger la Ñ de la limpieza de tildes
+      .replace(/Ñ/g, "\u0001")                        // proteger la Ñ de la limpieza de tildes
       .normalize("NFD").replace(/[̀-ͯ]/g, "")
-      .replace(//g, "Ñ")
+      .replace(/\u0001/g, "Ñ")
       .replace(/[^A-ZÑ ]/g, "")
       .replace(/ {2,}/g, " ")
       .replace(/^ +/, "")
@@ -97,7 +109,7 @@
   }
 
   function mostrarMutacion() {
-    var pct = Math.round(mutacion * 1000) / 10;      // una cifra decimal: 12,5
+    var pct = Math.round(mutacion * 1000) / 10;       // una cifra decimal: 12,5
     elMut.value = pct;
     elValMut.textContent = String(pct).replace(".", ",") + "%";
     elMutAuto.checked = mutAuto;
@@ -110,42 +122,66 @@
     mostrarMutacion();
   }
 
+  function ponerOrigen(v) {
+    verOrigen = v;
+    elOrigen.checked = v;
+    elLeyenda.hidden = !v;
+  }
+
   function corriendo() {
     return arrancado && !pausado && !ganado && !estancado;
   }
 
+  /* ---------- operadores (los usa paso() y, más adelante, la cámara lenta) ---------- */
+  function cruzar(p1, p2, corte) {       // cruce en un punto: comienzo de p1 + final de p2
+    var org = [];
+    for (var i = 0; i < objetivo.length; i++) org.push(i < corte ? "p1" : "p2");
+    return { txt: p1.txt.slice(0, corte) + p2.txt.slice(corte), org: org };
+  }
+
+  function mutar(hijo) {                 // cada letra cambia con probabilidad "mutacion"
+    var letras = hijo.txt.split(""), cambio = false;
+    for (var i = 0; i < letras.length; i++) {
+      if (Math.random() < mutacion) {
+        letras[i] = letraAlAzar();
+        hijo.org[i] = "mut";
+        cambio = true;
+      }
+    }
+    hijo.txt = letras.join("");
+    return cambio;
+  }
+
+  function copiaElite(ind) {
+    var org = [];
+    for (var i = 0; i < ind.txt.length; i++) org.push("elite");
+    return { txt: ind.txt, org: org, elite: true };
+  }
+
   /* ---------- un turno de evolución ---------- */
   function paso() {
-    var puntos = poblacion.map(puntaje);
-
-    // ordenar índices de mejor a peor
-    var orden = puntos.map(function (_, i) { return i; })
-      .sort(function (a, b) { return puntos[b] - puntos[a]; });
+    var puntos = poblacion.map(puntaje);          // 1. medir
+    var orden = ordenar(puntos);
 
     // elitismo: los 2 mejores siguen intactos
-    var nueva = [poblacion[orden[0]], poblacion[orden[1]]];
+    var nueva = [];
+    for (var e = 0; e < ELITE && e < orden.length; e++) nueva.push(copiaElite(poblacion[orden[e]]));
 
     while (nueva.length < poblacion.length) {
-      var p1 = poblacion[sorteo(puntos)];
+      var p1 = poblacion[sorteo(puntos)];         // 2. elegir (torneo)
       var p2 = poblacion[sorteo(puntos)];
-
-      // cruce en un punto
       var corte = 1 + Math.floor(Math.random() * (objetivo.length - 1));
-      var hijo = p1.slice(0, corte) + p2.slice(corte);
-
-      // mutación letra por letra
-      var letras = hijo.split("");
-      for (var i = 0; i < letras.length; i++) {
-        if (Math.random() < mutacion) letras[i] = ALFABETO[Math.floor(Math.random() * ALFABETO.length)];
-      }
-      nueva.push(letras.join(""));
+      var hijo = cruzar(p1, p2, corte);           // 3. cruzar
+      mutar(hijo);                                // 4. mutar
+      nueva.push(hijo);
     }
 
-    poblacion = nueva;
+    poblacion = nueva;                            // 5. repetir con la nueva generación
     generacion++;
 
     // ---- condiciones de parada ----
-    var mejor = mejorDe(poblacion);
+    var mejor = 0;
+    for (var k = 0; k < poblacion.length; k++) mejor = Math.max(mejor, puntaje(poblacion[k]));
     if (mejor > mejorAnt) { mejorAnt = mejor; ultimaMejora = generacion; }
     if (mejor >= objetivo.length) {
       ganado = true;                                   // encontró la palabra
@@ -179,26 +215,36 @@
   }
 
   /* ---------- dibujar ---------- */
+  /* fichas de una palabra: verde = letra correcta; con "ver origen",
+     franja azul/naranja = padre 1/2 y borde morado = mutación */
+  function fichas(ind, conOrigen) {
+    var p = ind.txt, html = "";
+    for (var c = 0; c < p.length; c++) {
+      var cls = p[c] === objetivo[c] ? "ok" : "";
+      if (p[c] === " ") cls += " esp";
+      if (conOrigen && ind.org[c] !== "ini" && ind.org[c] !== "elite") cls += " o-" + ind.org[c];
+      html += '<span class="' + cls + '">' + (p[c] === " " ? "␣" : p[c]) + "</span>";
+    }
+    return html;
+  }
+
   function pintar() {
     var puntos = poblacion.map(puntaje);
-    var orden = puntos.map(function (_, i) { return i; })
-      .sort(function (a, b) { return puntos[b] - puntos[a]; });
+    var orden = ordenar(puntos);
     var mejor = puntos[orden[0]];
     var prom = puntos.reduce(function (s, v) { return s + v; }, 0) / poblacion.length;
 
     elGen.textContent = generacion;
     elMejor.textContent = mejor + "/" + objetivo.length;
-    elProm.textContent = prom.toFixed(1);
+    elProm.textContent = prom.toFixed(1).replace(".", ",");
 
     var html = "";
-    for (var n = 0; n < Math.min(8, orden.length); n++) {
-      var p = poblacion[orden[n]], f = puntos[orden[n]], celdas = "";
-      for (var c = 0; c < p.length; c++) {
-        celdas += '<span class="' + (p[c] === objetivo[c] ? "ok" : "") +
-          (p[c] === " " ? " esp" : "") + '">' + (p[c] === " " ? "␣" : p[c]) + "</span>";
-      }
-      html += '<div class="srow"><div class="str">' + celdas + "</div>" +
-        '<div class="bar"><i style="width:' + (f / objetivo.length * 100) + '%"></i></div>' +
+    for (var n = 0; n < Math.min(FILAS, orden.length); n++) {
+      var ind = poblacion[orden[n]], f = puntos[orden[n]];
+      html += '<div class="srow' + (verOrigen ? " con-origen" : "") + '">' +
+        '<div class="str">' + fichas(ind, verOrigen) + "</div>" +
+        '<div class="bar"><i style="width:' + (f / objetivo.length * 100) + '%"></i>' +
+        (verOrigen && ind.elite ? '<em class="et-elite">élite</em>' : "") + "</div>" +
         '<div class="f">' + f + "</div></div>";
     }
     elFilas.style.setProperty("--n", objetivo.length);   // las fichas se achican con el largo
@@ -224,9 +270,7 @@
     if (poblacion.length === meta) return;
     if (poblacion.length > meta) {
       // al achicar: conservo los mejores
-      var pts = poblacion.map(puntaje);
-      var orden = pts.map(function (_, i) { return i; })
-        .sort(function (a, b) { return pts[b] - pts[a]; });
+      var orden = ordenar(poblacion.map(puntaje));
       poblacion = orden.slice(0, meta).map(function (i) { return poblacion[i]; });
     } else {
       while (poblacion.length < meta) poblacion.push(azar());
@@ -276,6 +320,8 @@
     if (mutAuto) ajustarMutacionAuto();
   });
 
+  elOrigen.addEventListener("change", function () { ponerOrigen(this.checked); pintar(); });
+
   elVel.addEventListener("change", function () { if (temporizador) correr(); });
 
   elPlay.addEventListener("click", function () {
@@ -292,7 +338,7 @@
       pausado = true;                                 // estaba corriendo → pausar
     }
     if (corriendo()) correr(); else pararReloj();
-    actualizarEstado();
+    pintar();
   });
 
   document.getElementById("obj-reset").addEventListener("click", function () {
@@ -304,10 +350,10 @@
   /* el objetivo cambió de largo: cada palabra se recorta o se completa al azar */
   function ajustarLargo() {
     var L = objetivo.length;
-    poblacion = poblacion.map(function (p) {
-      if (p.length > L) return p.slice(0, L);
-      while (p.length < L) p += ALFABETO[Math.floor(Math.random() * ALFABETO.length)];
-      return p;
+    poblacion = poblacion.map(function (ind) {
+      var txt = ind.txt.slice(0, L), org = ind.org.slice(0, L);
+      while (txt.length < L) { txt += letraAlAzar(); org.push("ini"); }
+      return { txt: txt, org: org };
     });
   }
 
@@ -325,7 +371,7 @@
   window.Presentacion.registrar("slide-demo-palabra", {
     start: function () {
       visible = true;
-      if (!poblacion.length) { mostrarMutacion(); reiniciar(); }   // estado inicial, sin correr
+      if (!poblacion.length) { mostrarMutacion(); ponerOrigen(false); reiniciar(); }   // estado inicial, sin correr
       if (corriendo()) correr();
       actualizarEstado();
     },
