@@ -276,9 +276,13 @@
     };
     datos.gana = indiceGanadora(datos.fotos);
     var f0 = datos.fotos[0], fN = datos.fotos[datos.gana];
-    elResumen.innerHTML = "De <strong>" + R.km(f0.d) + "</strong> a <strong>" + R.km(fN.d) + "</strong>: " +
-      "<strong>" + pct(f0.d, fN.d) + " % más corta</strong> en " + genRel(fN) + " generaciones " +
-      "<small>(km a escala ilustrativa)</small>.";
+    elResumen.innerHTML = datos.gana === 0
+      // con muy pocos barrios, la mejor ruta al azar ya puede ser la óptima
+      ? "La mejor ruta al azar ya era la más corta (<strong>" + R.km(f0.d) + "</strong>): con tan pocos " +
+        "barrios no hubo nada que mejorar. Pruebe con más barrios."
+      : "De <strong>" + R.km(f0.d) + "</strong> a <strong>" + R.km(fN.d) + "</strong>: " +
+        "<strong>" + pct(f0.d, fN.d) + " % más corta</strong> en " + genRel(fN) + " generaciones " +
+        "<small>(km a escala ilustrativa)</small>.";
     if (e.cambioMapa) {
       elNota.hidden = false;
       elNota.textContent = "El mapa cambió en la generación " + e.cambioMapa.gen +
