@@ -3,6 +3,7 @@
    · crea los puntos laterales, progreso y contador
    · teclado (← → espacio Home End F), swipe táctil
    · pantalla completa (botón de la portada / tecla F)
+   · la ayuda de teclado (#hint) se ve solo en la portada
    · ciclo de vida de los demos: cada uno se registra con
      Presentacion.registrar("id-de-su-slide", demo)
    ========================================================= */
@@ -36,6 +37,7 @@
       s.classList.toggle("active", k === idx);
       s.classList.toggle("prev", k < idx);     // las anteriores salen hacia la izquierda
     });
+    document.body.classList.toggle("con-ayuda", idx === 0);   // la ayuda de teclado, solo en la portada
     document.body.classList.toggle("oscuro",
       slides[idx].classList.contains("portada") || slides[idx].classList.contains("cierre"));
     Array.prototype.forEach.call(dotsEl.children, function (d, k) {

@@ -738,7 +738,14 @@ body.oscuro{--nav-bg:rgba(255,255,255,.1);--nav-line:rgba(255,255,255,.22);--nav
 .dot:hover{background:var(--green)}
 .dot.active{background:var(--green);height:1.9rem}
 
-#hint{position:fixed;left:1.3rem;bottom:1.3rem;font-size:.95rem;color:var(--nav-soft);z-index:60}
+/* ayuda de teclado: solo en la portada (en las demás slides tapaba contenido) */
+#hint{position:fixed;left:1.3rem;bottom:1.3rem;font-size:.95rem;color:var(--nav-soft);z-index:60;
+  opacity:0;visibility:hidden;transition:opacity .5s var(--ease),visibility 0s linear .5s}
+body.con-ayuda #hint{opacity:1;visibility:visible;transition:opacity .5s var(--ease)}
+
+/* foco visible del teclado, igual en todos los controles */
+button:focus-visible,a:focus-visible,select:focus-visible,input[type=text]:focus-visible,input[type=range]:focus-visible{
+  outline:.2rem solid var(--foco);outline-offset:.15rem}
 
 /* botón de la portada */
 .startbtns{display:flex;gap:1rem;flex-wrap:wrap;margin-top:.8rem}
