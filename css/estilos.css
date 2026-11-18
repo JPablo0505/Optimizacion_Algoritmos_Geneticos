@@ -293,7 +293,9 @@ pre.code.dos{column-count:2;column-gap:3rem;column-fill:auto;height:calc(100vh -
 /* slide del código, por partes (js/codigo.js) */
 .codigo{display:flex;flex-direction:column;gap:.7rem;min-height:0}
 .codigo-barra{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}
-.codigo-barra .btn{margin-left:auto;padding:.5rem 1.1rem;font-size:var(--t-nota)}
+.codigo-barra .btn{padding:.5rem 1.1rem;font-size:var(--t-nota)}
+.codigo-ayuda{margin-left:auto;font-size:var(--t-nota);color:var(--muted)}
+.codigo-ayuda b{font-family:var(--mono);font-size:.95em}
 .codigo .tabs{flex-wrap:wrap}
 .codigo .tabs button{font-family:var(--font)}
 .codigo-vista{min-height:0}
@@ -544,7 +546,7 @@ canvas{
 }
 :is(.srow,.cam-fila) .str > span.o-p1::before{background:var(--c-p1)}
 :is(.srow,.cam-fila) .str > span.o-p2::before{background:var(--c-p2)}
-:is(.srow,.cam-fila) .str > span.o-mut{box-shadow:inset 0 0 0 .2rem var(--c-mut);color:var(--c-mut);font-weight:800;animation:destello-mut 1.2s var(--ease)}
+:is(.srow,.cam-fila) .str > span.o-mut{box-shadow:inset 0 0 0 .2rem var(--c-mut);color:var(--c-mut);font-weight:800;animation:destello-mut .9s var(--ease)}
 :is(.srow,.cam-fila) .str > span.o-mut.ok{color:#fff;background:var(--c-ok)}
 @keyframes destello-mut{0%{background:var(--c-mut);color:#fff;transform:scale(1.12)}100%{transform:none}}
 .bar{position:relative}
@@ -587,7 +589,7 @@ canvas{
 .cam-fila.hijo{background:var(--g-bg)}
 .cam-fila .str > span.t-p1{background:var(--c-p1);color:#fff;font-weight:800}
 .cam-fila .str > span.t-p2{background:var(--c-p2);color:var(--c-p2-txt);font-weight:800}
-.cam-fila .str > span.t-mut{background:var(--c-mut);color:#fff;font-weight:800;animation:destello-mut 1.2s var(--ease)}
+.cam-fila .str > span.t-mut{background:var(--c-mut);color:#fff;font-weight:800;animation:destello-mut .9s var(--ease)}
 .cam-fila .str > span.t-off{opacity:.3}
 /* línea vertical del punto de corte */
 .cam-fila .str > span.corte::after{
@@ -843,7 +845,7 @@ button:focus-visible,a:focus-visible,select:focus-visible,input[type=text]:focus
 }
 .slide.active .rv-izq{animation-name:rv-izq}
 .slide.active .rv-zoom{animation-name:rv-zoom}
-.slide.active h1 .l > i{animation:rv-linea 1s var(--ease) backwards;animation-delay:calc(.3s + var(--i,0) * .14s)}
+.slide.active h1 .l > i{animation:rv-linea .9s var(--ease) backwards;animation-delay:calc(.3s + var(--i,0) * .14s)}
 .js h1 .l > i{transform:translateY(105%)}
 .slide.active h1 .l > i{transform:none}
 
