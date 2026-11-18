@@ -9,7 +9,7 @@
   --card:#ffffff;
   --ink:#0c2217;
   --muted:#3f544a;
-  --soft:#6a7d71;
+  --soft:#56695d;      /* notas y ayudas: 5,4:1 sobre el fondo (AA) */
   --line:#d8e3da;
 
   --deep:#08281a;
@@ -19,6 +19,9 @@
   --lime:#8dc63f;
   --teal:#0e8c7f;
   --teal-l:#3ebdac;
+  --teal-d:#0a6b61;    /* turquesa para TEXTO: 5,6:1 sobre su fondo claro (AA) */
+  --amber-d:#7a4500;   /* ámbar para TEXTO: 6,3:1 sobre su fondo claro (AA) */
+  --foco:#0e8c7f;      /* anillo de foco del teclado: 3,8:1 (AA para bordes) */
   --amber:#a55f00;
   --amber-l:#f9a12c;
   --red:#ef434d;
@@ -36,6 +39,7 @@
   --c-cand:#c2185b;    /* fucsia: la mejor ruta HASTA AHORA (aún puede mejorar) */
   --c-p1-bg:#e4edfc;
   --c-p2-bg:#fdeedd;
+  --c-p2-txt:#2b1400;  /* texto sobre relleno naranja (5,6:1); el blanco no alcanza */
   --c-mut-bg:#f1e8fc;
 
   /* escala tipográfica única para todas las slides (crece con la pantalla).
@@ -189,10 +193,10 @@ a:hover{border-bottom-color:var(--green-d)}
 .tag{
   display:inline-block;font-size:1rem;font-weight:700;
   padding:.3rem .95rem;border-radius:999px;margin-bottom:.7rem;
-  color:var(--teal);background:var(--t-bg);
+  color:var(--teal-d);background:var(--t-bg);
 }
 .card.g .tag{color:var(--green-d);background:#d3ecd6}
-.card.o .tag{color:var(--amber);background:#fde4b8}
+.card.o .tag{color:var(--amber-d);background:#fde4b8}
 
 /* ---------- cajas destacadas ---------- */
 .okbox{
@@ -254,10 +258,11 @@ td:first-child{color:var(--ink);font-weight:700;width:36%}
   width:2.1rem;height:2.1rem;border-radius:.55rem;display:grid;place-items:center;
   font-size:1rem;font-weight:800;
 }
-.cell.pa{background:var(--green);color:#fff}
-.cell.pb{background:var(--teal-l);color:#05302b}
-.cell.same{background:#d9e4dc;color:#5b7165}
-.cell.mut{background:var(--red);color:#fff}
+/* mismos colores que las demos: padre 1 azul, padre 2 naranja, mutación morado */
+.cell.pa{background:var(--c-p1);color:#fff}
+.cell.pb{background:var(--c-p2);color:var(--c-p2-txt)}
+.cell.same{background:#d9e4dc;color:#3f544a}
+.cell.mut{background:var(--c-mut);color:#fff}
 
 /* ---------- pasos numerados (secuencia real) ---------- */
 .pasos{list-style:none;padding:0;display:grid;gap:.75rem;counter-reset:p}
@@ -341,7 +346,7 @@ code{font-family:var(--mono);background:rgba(2,105,55,.09);padding:.1em .4em;bor
 .btn:disabled:hover{border-color:var(--line);background:var(--paper)}
 .btn.primary{background:linear-gradient(100deg,var(--green-d),#1f9a4a);border-color:transparent;color:#fff;box-shadow:0 .6rem 1.2rem -.7rem rgba(2,105,55,.8)}
 .btn.primary:hover{filter:brightness(1.1)}
-.btn:focus-visible,.bigbtn:focus-visible,.navbtn:focus-visible,.dot:focus-visible{outline:.2rem solid var(--teal-l);outline-offset:.2rem}
+.btn:focus-visible,.bigbtn:focus-visible,.navbtn:focus-visible,.dot:focus-visible{outline:.2rem solid var(--foco);outline-offset:.2rem}
 
 /* controles en vivo: etiqueta + input o rango */
 .ctl{
@@ -374,7 +379,7 @@ code{font-family:var(--mono);background:rgba(2,105,55,.09);padding:.1em .4em;bor
 }
 .stat span{color:var(--muted);font-size:1rem;font-weight:600}
 .stat.estado{background:var(--t-bg)}
-.stat.estado b{font-size:1.2rem;line-height:1.3;color:var(--teal);letter-spacing:0;padding:.25rem 0}
+.stat.estado b{font-size:1.2rem;line-height:1.3;color:var(--teal-d);letter-spacing:0;padding:.25rem 0}
 .stats.tres{grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem}
 .stats.tres .stat{padding:.5rem .9rem .55rem}
 .stats.tres .stat b{font-size:1.6rem}
@@ -473,7 +478,7 @@ canvas{
 }
 .sw input:checked{background:var(--green-d)}
 .sw input:checked::after{transform:translateX(1.05rem)}
-.sw input:focus-visible{outline:.2rem solid var(--teal-l);outline-offset:.15rem}
+.sw input:focus-visible{outline:.2rem solid var(--foco);outline-offset:.15rem}
 .ctl small,.sw small{font-weight:500;color:var(--soft);font-size:var(--t-min)}
 
 /* filas del ejemplo de palabras: una ficha por letra; se achican con el largo */
@@ -548,7 +553,7 @@ canvas{
 .cam-fila.hijo .cam-etq{color:var(--ink)}
 .cam-fila.hijo{background:var(--g-bg)}
 .cam-fila .str > span.t-p1{background:var(--c-p1);color:#fff;font-weight:800}
-.cam-fila .str > span.t-p2{background:var(--c-p2);color:#fff;font-weight:800}
+.cam-fila .str > span.t-p2{background:var(--c-p2);color:var(--c-p2-txt);font-weight:800}
 .cam-fila .str > span.t-mut{background:var(--c-mut);color:#fff;font-weight:800;animation:destello-mut 1.2s var(--ease)}
 .cam-fila .str > span.t-off{opacity:.3}
 /* línea vertical del punto de corte */
@@ -569,7 +574,7 @@ canvas{
   border-radius:999px;padding:.45rem 1rem;cursor:pointer;transition:background .2s,color .2s;
 }
 .tabs button.on{background:var(--green-d);color:#fff}
-.tabs button:focus-visible{outline:.2rem solid var(--teal-l);outline-offset:.1rem}
+.tabs button:focus-visible{outline:.2rem solid var(--foco);outline-offset:.1rem}
 
 /* historia de la palabra ganadora */
 .historia[hidden]{display:none}
@@ -656,7 +661,7 @@ canvas{
   padding:.35rem .85rem;cursor:pointer;box-shadow:0 .4rem .9rem -.5rem rgba(0,0,0,.4);
 }
 .btn-ampliar:hover{border-color:var(--green);background:#fff}
-.btn-ampliar:focus-visible{outline:.2rem solid var(--teal-l);outline-offset:.15rem}
+.btn-ampliar:focus-visible{outline:.2rem solid var(--foco);outline-offset:.15rem}
 .mapa-velo{position:fixed;inset:0;background:rgba(8,40,26,.62);z-index:70}
 .mapa-wrap.ampliado{
   position:fixed!important;z-index:71;top:50%;left:50%;transform:translate(-50%,-50%);
@@ -772,9 +777,9 @@ body.oscuro{--nav-bg:rgba(255,255,255,.1);--nav-line:rgba(255,255,255,.22);--nav
   background:rgba(255,255,255,.1);
   transition:background .5s var(--ease),transform .5s var(--ease),color .3s;
 }
-.g-cells .a{background:var(--green)}
-.g-cells .b{background:var(--teal-l);color:#05302b}
-.g-cells .m{background:var(--red);transform:scale(1.18)}
+.g-cells .a{background:var(--c-p1)}
+.g-cells .b{background:var(--c-p2);color:var(--c-p2-txt)}
+.g-cells .m{background:var(--c-mut);transform:scale(1.18)}
 .g-cells .v{background:rgba(255,255,255,.1);color:transparent}
 .g-flecha{height:1.7rem;width:1.7rem;margin:0 auto;border-right:.22rem solid rgba(255,255,255,.35);border-bottom:.22rem solid rgba(255,255,255,.35);transform:rotate(45deg) translate(-.25rem,-.25rem)}
 
