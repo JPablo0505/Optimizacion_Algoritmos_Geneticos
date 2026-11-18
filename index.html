@@ -349,8 +349,8 @@
       <span class="kicker">Ejemplo 2 en vivo</span>
       <h2>El repartidor, evolucionando</h2>
     </div>
-    <p class="lead">Los <strong>puntos son barrios</strong>; la línea verde es la <strong>mejor ruta</strong>
-    encontrada.</p>
+    <p class="lead">El repartidor sale de la <strong>Bodega</strong>, visita todos los barrios y vuelve.
+    La línea verde es la <strong>mejor ruta</strong> encontrada.</p>
   </div>
   <div class="demo">
     <div class="demo-head">
@@ -389,11 +389,15 @@
     </div>
 
     <div class="demo-body viaje">
-      <canvas id="ciudades" width="760" height="400"></canvas>
+      <div class="mapa-wrap">
+        <canvas id="plano" width="760" height="400" aria-hidden="true"></canvas>
+        <canvas id="ciudades" width="760" height="400"
+                aria-label="Plano con los barrios y la mejor ruta"></canvas>
+      </div>
       <div class="graf-lado">
         <div class="stats" style="grid-template-columns:repeat(3,minmax(0,1fr))">
           <div class="stat"><b id="via-gen">0</b><span>Generación</span></div>
-          <div class="stat"><b id="via-mejor">-</b><span>Mejor distancia</span></div>
+          <div class="stat"><b id="via-mejor">-</b><span>Mejor ruta</span></div>
           <div class="stat"><b id="via-inicial">-</b><span>Al empezar</span></div>
           <div class="stat"><b id="via-mejora">-</b><span>Mejora</span></div>
           <div class="stat estado" style="grid-column:span 2"><b id="via-estado">Listo para iniciar</b><span>Estado</span></div>
@@ -542,6 +546,7 @@ mejor_ruta, mejor_d = <span class="k">None</span>, <span class="k">None</span>
 <script src="js/navegacion.js"></script>
 <script src="js/animaciones.js"></script>
 <script src="js/ciclo.js"></script>
+<script src="js/plano.js"></script>
 <script src="js/ejemplo-palabra.js"></script>
 <script src="js/ejemplo-viajero.js"></script>
 </body>
