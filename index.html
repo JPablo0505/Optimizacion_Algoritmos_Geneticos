@@ -428,6 +428,49 @@
   </div>
 </section>
 
+<!-- 12. Así evolucionó la ruta (resultado del ejemplo 2) -->
+<section class="slide" data-title="Así evolucionó la ruta" id="slide-demo-ruta">
+  <div class="cab-demo seq">
+    <div class="seq-t seq">
+      <span class="kicker">Ejemplo 2: el resultado</span>
+      <h2>Así evolucionó la ruta</h2>
+    </div>
+    <div class="ruta-cab">
+      <p class="lead" id="ruta-resumen">Aquí verá cómo la ruta del repartidor se fue acortando, generación tras generación.</p>
+      <p class="ruta-nota" id="ruta-nota" hidden></p>
+    </div>
+  </div>
+  <div class="demo">
+    <div class="ruta-aviso" id="ruta-aviso" hidden>
+      <p id="ruta-aviso-txt">Primero corra el ejemplo en la slide anterior.</p>
+      <button class="btn primary" id="ruta-volver">← Ir al ejemplo del repartidor</button>
+    </div>
+    <div class="ruta-contenido" id="ruta-contenido">
+      <div class="galeria" id="ruta-galeria" aria-label="La mejor ruta en distintos momentos"></div>
+      <div class="ruta-cuerpo">
+        <div class="mapa-wrap ruta-mapa">
+          <canvas id="ruta-fondo" width="760" height="400" aria-hidden="true"></canvas>
+          <canvas id="ruta-moto" width="760" height="400"
+                  aria-label="La moto de reparto recorre la ruta ganadora"></canvas>
+        </div>
+        <div class="ruta-lado">
+          <div class="ctrls">
+            <button class="btn primary" id="ruta-play">▶ Recorrer la ruta ganadora</button>
+            <button class="btn" id="ruta-repetir">↻ Repetir</button>
+          </div>
+          <p class="ruta-recorrido" id="ruta-recorrido" aria-live="polite"></p>
+          <div class="ctl">
+            <label for="ruta-tiempo">Línea de tiempo: mueva para rebobinar la evolución</label>
+            <input type="range" id="ruta-tiempo" min="0" max="1" step="1" value="1">
+          </div>
+          <p class="ruta-tiempo-txt" id="ruta-tiempo-txt"></p>
+          <p class="hint">Cada mini-mapa es la mejor ruta de ese momento. Pulse uno para verlo en grande.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
 <!-- 12. Código Python -->
 <section class="slide" data-title="Código Python">
   <div class="cab-demo seq">
@@ -563,5 +606,6 @@ mejor_ruta, mejor_d = <span class="k">None</span>, <span class="k">None</span>
 <script src="js/plano.js"></script>
 <script src="js/ejemplo-palabra.js"></script>
 <script src="js/ejemplo-viajero.js"></script>
+<script src="js/ejemplo-ruta.js"></script>
 </body>
 </html>

@@ -16,6 +16,16 @@
    y, con las generaciones, se parecen cada vez más a la verde
    (la población converge). Interruptor "Mostrar la población".
    NO arranca solo: hay que presionar "Empezar".
+
+   Instantáneas para la slide 12 ("Así evolucionó la ruta"):
+   se guarda la mejor ruta en la generación 0, en cada nuevo
+   récord y en los hitos 10, 50, 100, 200 y 500. Si el mapa
+   cambia durante la corrida (agregar, quitar o mover un barrio)
+   no se borra todo: las instantáneas empiezan de nuevo desde ese
+   momento (su nueva "generación 0") y se recuerda en qué
+   generación cambió, para avisarlo en la slide 12.
+   window.Repartidor expone esos datos (lo usa js/ejemplo-ruta.js).
+
    Condiciones de parada (como en todo algoritmo genético):
    · 200 generaciones sin mejora → se detiene (estancado)
    · pausa manual                → el usuario lo para
@@ -47,6 +57,11 @@
   var inicialD = null;
   var generacion = 0;
   var ultimaMejora = 0;           // generación en que hubo la última mejora
+
+  var fotos = [];                 // instantáneas: [{ gen, ruta (desde la Bodega), d }]
+  var genBase = 0;                // generación que cuenta como "0" para las instantáneas
+  var cambioMapa = null;          // { gen } si el mapa cambió en plena corrida
+  var HITOS = [10, 50, 100, 200, 500];
 
   var mutacion = 0.35;
   var poblacionMeta = 120;
@@ -95,6 +110,8 @@
     return g;
   }
   var pctx = prepararCanvas(elPlano, W, H);
+  var planoLimpio = document.createElement("canvas");   // el mismo plano sin la nota (mini-mapas)
+  var lctx = prepararCanvas(planoLimpio, W, H);
   var ctx = prepararCanvas(elMapa, W, H);
   var cctx = prepararCanvas(elCurva, CW, CH);
 
@@ -120,6 +137,7 @@
       nombresLibres[i] = nombresLibres[k]; nombresLibres[k] = t;
     }
     window.Plano.dibujar(pctx, W, H, semilla);
+    window.Plano.dibujar(lctx, W, H, semilla, false);
   }
 
   /* el siguiente nombre que no esté en uso */
@@ -146,7 +164,7 @@
         dist[i][j] = Math.sqrt(dx * dx + dy * dy);
       }
     }
-    etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, zonaLeyenda());
+    etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, zonaLeyenda(), window.Plano.tamEtiqueta(elMapa, W));
   }
 
   /* la leyenda HTML tapa una esquina del mapa: ahí no se ponen nombres */
@@ -203,7 +221,26 @@
     curvaGen0 = generacion; esc = 1;
     ultimaMejora = generacion;
     estancado = false;
+    empezarFotos();
     pintar();
+  }
+
+  /* ---------- instantáneas de la mejor ruta ---------- */
+  function empezarFotos() {
+    genBase = generacion;
+    fotos = [];
+    tomarFoto();
+  }
+
+  function tomarFoto() {
+    var ult = fotos[fotos.length - 1];
+    if (ult && ult.gen === generacion) { ult.ruta = desdeBodega(mejorRuta); ult.d = mejorD; return; }
+    fotos.push({ gen: generacion, ruta: desdeBodega(mejorRuta), d: mejorD });
+  }
+
+  /* el mapa cambió: si ya había una corrida en marcha, se recuerda en qué generación */
+  function marcarCambioMapa() {
+    if (arrancado && (generacion > genBase || fotos.length > 1)) cambioMapa = { gen: generacion };
   }
 
   function ajustarPoblacion() {
@@ -262,7 +299,9 @@
       mejorRuta = poblacion[quien].slice();
       ultimaMejora = generacion;                      // hubo mejora: se reinicia el plazo
       recordsGen.push(generacion);
+      tomarFoto();                                    // nuevo récord → instantánea
     }
+    if (HITOS.indexOf(generacion - genBase) >= 0) tomarFoto();   // hitos fijos
     anotarCurva(mejorD, suma / d.length);
 
     // nueva generación
@@ -482,6 +521,7 @@
   /* ---------- cambios en vivo ---------- */
   function ajustarBarrios() {
     var meta = +elBarrios.value;
+    if (meta !== ciudades.length) marcarCambioMapa();
     while (ciudades.length < meta) agregarCiudad(nuevaCiudad());
     while (ciudades.length > meta && ciudades.length > 1) ciudades.pop();   // la Bodega no se quita
     elValBarrios.textContent = ciudades.length;
@@ -491,6 +531,7 @@
   }
 
   function medirOtraVez() {              // el mapa cambió sin cambiar la cantidad
+    marcarCambioMapa();
     calcularDistancias();
     tomarMedidaInicial();
     if (!reloj && corriendo()) correr();
@@ -516,7 +557,7 @@
   elVerPob.addEventListener("change", function () {
     verPob = this.checked;
     document.getElementById("via-leyenda").hidden = !verPob;   // sin grises, la leyenda sobra
-    etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, zonaLeyenda());
+    etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, zonaLeyenda(), window.Plano.tamEtiqueta(elMapa, W));
     dibujarRuta();
   });
 
@@ -540,6 +581,7 @@
     this.blur();
     var n = ciudades.length;
     nuevoPlano();                                     // plano nuevo, nombres nuevos
+    cambioMapa = null;                                // es otro problema: no hay "cambio" que avisar
     ciudades = [];
     for (var i = 0; i < n; i++) agregarCiudad(nuevaCiudad());
     calcularDistancias();
@@ -612,6 +654,7 @@
       if (cerca !== -1 && estaba === cerca && !movio) {
         // click sin mover sobre un barrio → quitarlo (la Bodega no se quita)
         if (ciudades.length > 6 && !ciudades[cerca].bodega) {
+          marcarCambioMapa();
           ciudades.splice(cerca, 1);
           cursor = null;
           elBarrios.value = ciudades.length;
@@ -623,6 +666,7 @@
       } else if (cerca === -1 && !movio) {
         // click en vacío → agregar barrio (con el siguiente nombre libre)
         if (ciudades.length < +elBarrios.max) {
+          marcarCambioMapa();
           agregarCiudad({ x: p.x, y: p.y });
           elBarrios.value = ciudades.length;
           elValBarrios.textContent = ciudades.length;
@@ -645,6 +689,24 @@
     if (!reloj && corriendo()) correr();
   });
 
+  /* ---------- datos de la corrida para la slide 12 ---------- */
+  window.Repartidor = {
+    W: W, H: H,
+    km: km,
+    plano: elPlano,                                   // canvas del plano (se copia con drawImage)
+    planoLimpio: planoLimpio,                         // el mismo plano sin la nota
+    estado: function () {
+      return {
+        arrancado: arrancado,
+        ciudades: ciudades,
+        fotos: fotos,
+        genBase: genBase,
+        cambioMapa: cambioMapa,
+        generacion: generacion
+      };
+    }
+  };
+
   /* ---------- registro con la presentación ---------- */
   window.Presentacion.registrar("slide-demo-viajero", {
     start: function () {
@@ -659,7 +721,7 @@
 
   function reubicarEtiquetas() {
     if (!ciudades.length) return;
-    etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, zonaLeyenda());
+    etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, zonaLeyenda(), window.Plano.tamEtiqueta(elMapa, W));
     dibujarRuta();
   }
   window.addEventListener("resize", function () { if (visible) reubicarEtiquetas(); });
@@ -670,7 +732,8 @@
     document.fonts.ready.then(function () {
       if (!ciudades.length) return;
       window.Plano.dibujar(pctx, W, H, semilla);
-      etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, zonaLeyenda());
+      window.Plano.dibujar(lctx, W, H, semilla, false);
+      etiquetas = window.Plano.ubicarEtiquetas(ctx, ciudades, W, H, zonaLeyenda(), window.Plano.tamEtiqueta(elMapa, W));
       dibujarRuta();
     });
   }

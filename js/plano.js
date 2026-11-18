@@ -36,7 +36,7 @@
   }
 
   /* ---------- el plano (fondo) ---------- */
-  function dibujar(g, w, h, semilla) {
+  function dibujar(g, w, h, semilla, conNota) {
     var r = azar(semilla);
     g.save();
     g.clearRect(0, 0, w, h);
@@ -86,16 +86,18 @@
     avenida(ax - 50, -10, ax + 50, h + 10);
     avenida(-10, ay + 30, w + 10, ay - 30);
 
-    // nota discreta: es un plano ilustrativo
-    var nota = "Plano ilustrativo · distancias en línea recta";
-    g.font = '600 15px "Plus Jakarta Sans", "Segoe UI", sans-serif';
-    var tw = g.measureText(nota).width;
-    g.fillStyle = "rgba(255,255,255,.85)";
-    redondeado(g, w - tw - 26, h - 32, tw + 16, 24, 7);
-    g.fill();
-    g.fillStyle = "#5d7266";
-    g.textBaseline = "middle";
-    g.fillText(nota, w - tw - 18, h - 20);
+    // nota discreta: es un plano ilustrativo (los mini-mapas van sin nota)
+    if (conNota !== false) {
+      var nota = "Plano ilustrativo · distancias en línea recta";
+      g.font = '600 17px "Plus Jakarta Sans", "Segoe UI", sans-serif';
+      var tw = g.measureText(nota).width;
+      g.fillStyle = "rgba(255,255,255,.88)";
+      redondeado(g, w - tw - 26, h - 34, tw + 16, 26, 7);
+      g.fill();
+      g.fillStyle = "#4b5f54";
+      g.textBaseline = "middle";
+      g.fillText(nota, w - tw - 18, h - 21);
+    }
     g.restore();
   }
 
@@ -154,11 +156,20 @@
   /* ---------- etiquetas sin solaparse ----------
      Se ubican una vez (cuando cambian los barrios): cada nombre prueba
      4 posiciones y, si choca con otro, se omite (se ve al pasar el cursor). */
-  var FUENTE = '700 16px "Plus Jakarta Sans", "Segoe UI", sans-serif';
+  /* tam = tamaño de letra en unidades del mapa; se elige para que en pantalla
+     mida al menos ~14 px (ver tamEtiqueta) */
+  function fuente(tam) { return "700 " + (tam || 16) + 'px "Plus Jakarta Sans", "Segoe UI", sans-serif'; }
 
-  function ubicarEtiquetas(g, ciudades, w, h, reservado) {
+  /* tamaño de letra (en unidades del mapa) para que en pantalla se vea de ≥ 14 px */
+  function tamEtiqueta(canvas, w) {
+    var ancho = canvas.getBoundingClientRect().width;
+    return ancho ? Math.max(16, Math.ceil(14 * w / ancho)) : 16;
+  }
+
+  function ubicarEtiquetas(g, ciudades, w, h, reservado, tam) {
+    tam = tam || 16;
     g.save();
-    g.font = FUENTE;
+    g.font = fuente(tam);
     var puestas = (reservado || []).slice(), out = [];   // "reservado": zonas tapadas (p. ej. una leyenda)
     // la Bodega primero: siempre tiene etiqueta
     var orden = ciudades.map(function (_, i) { return i; })
@@ -167,7 +178,7 @@
     var pinesR = ciudades.map(function (q) { return { x: q.x - 9, y: q.y - 13, w: 18, h: 24 }; });
     orden.forEach(function (i) {
       var q = ciudades[i], txt = q.bodega ? "Bodega" : q.nombre;
-      var tw = g.measureText(txt).width + 10, th = 21;
+      var tw = g.measureText(txt).width + 10, th = Math.round(tam * 1.32);
       var cand = [
         { x: q.x + 11, y: q.y - th / 2 }, { x: q.x - 11 - tw, y: q.y - th / 2 },
         { x: q.x - tw / 2, y: q.y - 16 - th }, { x: q.x - tw / 2, y: q.y + 13 }
@@ -177,8 +188,13 @@
         if (rr.x < 2 || rr.y < 2 || rr.x + rr.w > w - 2 || rr.y + rr.h > h - 36) continue;
         if (choca(rr, puestas) || choca(rr, pinesR, i)) continue;
         puestas.push(rr);
-        out[i] = { x: rr.x, y: rr.y, w: tw, h: th, txt: txt };
+        out[i] = { x: rr.x, y: rr.y, w: tw, h: th, txt: txt, tam: tam };
         break;
+      }
+      if (q.bodega && !out[i]) {                     // la Bodega siempre lleva su nombre
+        var bx = Math.min(Math.max(q.x - tw / 2, 2), w - tw - 2), by = Math.max(2, q.y - 18 - th);
+        puestas.push({ x: bx, y: by, w: tw, h: th });
+        out[i] = { x: bx, y: by, w: tw, h: th, txt: txt, tam: tam };
       }
     });
     g.restore();
@@ -198,7 +214,9 @@
      w = ancho lógico del mapa */
   function etiquetas(g, ciudades, ubic, extra, w) {
     g.save();
-    g.font = FUENTE;
+    var tam = 16;
+    for (var j = 0; j < ubic.length; j++) if (ubic[j]) { tam = ubic[j].tam; break; }
+    g.font = fuente(tam);
     g.textBaseline = "middle";
     function una(e, bodega, fuerte) {
       g.fillStyle = fuerte ? "#08281a" : bodega ? "rgba(8,40,26,.92)" : "rgba(255,255,255,.88)";
@@ -214,7 +232,7 @@
       var q = ciudades[extra], txt = q.bodega ? "Bodega" : q.nombre;
       var tw = g.measureText(txt).width + 10;
       var x = Math.min(Math.max(q.x - tw / 2, 4), (w || 760) - tw - 4);
-      una({ x: x, y: Math.max(4, q.y - 38), w: tw, h: 22, txt: txt }, q.bodega, true);
+      una({ x: x, y: Math.max(4, q.y - 18 - tam * 1.4), w: tw, h: Math.round(tam * 1.38), txt: txt }, q.bodega, true);
     }
     g.restore();
   }
@@ -225,6 +243,7 @@
     dibujar: dibujar,
     pines: pines,
     ubicarEtiquetas: ubicarEtiquetas,
+    tamEtiqueta: tamEtiqueta,
     etiquetas: etiquetas,
     redondeado: redondeado
   };

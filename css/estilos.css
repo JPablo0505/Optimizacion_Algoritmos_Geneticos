@@ -372,7 +372,41 @@ code{font-family:var(--mono);background:rgba(2,105,55,.09);padding:.1em .4em;bor
   background:rgba(255,255,255,.9);border-radius:.6rem;padding:.25rem .6rem;gap:.2rem .9rem;color:var(--ink);
 }
 .leyenda.sobre-mapa[hidden]{display:none}
-#slide-demo-palabra,#slide-demo-viajero{padding-top:clamp(1rem,2.6vh,2.2rem)}
+#slide-demo-palabra,#slide-demo-viajero,#slide-demo-ruta{padding-top:clamp(1rem,2.6vh,2.2rem)}
+
+/* ---------- slide 12: así evolucionó la ruta ---------- */
+.ruta-aviso{display:flex;flex-direction:column;align-items:center;gap:1.2rem;padding:3rem 1rem;text-align:center}
+.ruta-aviso[hidden],.ruta-contenido[hidden],.ruta-nota[hidden]{display:none}
+.ruta-aviso p{font-size:1.4rem;color:var(--ink);font-weight:600}
+.ruta-contenido{display:flex;flex-direction:column;gap:.7rem}
+#slide-demo-ruta .demo{padding-top:1.1rem;padding-bottom:1.1rem}
+.ruta-cab{display:flex;flex-direction:column;gap:.4rem}
+.ruta-nota{font-size:1rem;color:#5a4524;background:var(--o-bg);border-left:.25rem solid var(--amber-l);padding:.4rem .8rem;border-radius:.5rem}
+#ruta-resumen small{font-size:.8em;color:var(--soft);font-weight:500}
+.galeria{display:flex;gap:.8rem;align-items:flex-end}
+.foto{
+  flex:1 1 0;min-width:0;font-family:inherit;cursor:pointer;text-align:left;
+  background:var(--paper);border:2px solid var(--line);border-radius:1rem;padding:.4rem .4rem .45rem;
+  display:flex;flex-direction:column;gap:.3rem;transition:border-color .2s,transform .25s var(--ease);
+}
+.foto:hover{border-color:var(--green)}
+.foto.sel{box-shadow:0 0 0 .2rem rgba(67,182,73,.35)}
+.foto canvas{width:100%;height:auto;border-radius:.6rem;border:0;background:#fbfaf6}
+.foto-pie{font-size:1rem;color:var(--muted);line-height:1.3}
+.foto-pie b{color:var(--ink)}
+.foto.ganadora{flex-grow:1.2;border-color:var(--c-ok);background:var(--g-bg)}
+.foto-tag{
+  display:inline-block;font-style:normal;font-weight:800;font-size:.95rem;color:#fff;background:var(--c-ok);
+  border-radius:999px;padding:.05rem .6rem;margin-right:.3rem;
+}
+.ruta-cuerpo{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:1.4rem;align-items:start}
+.mapa-wrap.ruta-mapa{max-width:calc(34vh * 1.9)}
+#ruta-moto{background:transparent}
+#ruta-fondo{background:#fbfaf6}
+.ruta-lado{display:flex;flex-direction:column;gap:.7rem}
+.ruta-recorrido{font-size:1.05rem;font-weight:700;color:var(--green-d);min-height:1.4em}
+.ruta-tiempo-txt{font-size:1.05rem;color:var(--ink);line-height:1.4}
+.ruta-lado .hint{margin:0}
 .stats.cuatro{grid-template-columns:repeat(4,minmax(0,1fr));gap:.6rem}
 .stats.cuatro .stat{padding:.45rem .8rem .5rem}
 .stats.cuatro .stat b{font-size:1.4rem}
@@ -729,7 +763,9 @@ body.oscuro{--nav-bg:rgba(255,255,255,.1);--nav-line:rgba(255,255,255,.22);--nav
    PANTALLAS PEQUEÑAS
    ========================================================= */
 @media (max-width:1000px){
-  .grid.c3,.grid.c2,.split,.split.eq,.cab-demo,.portada-grid,.demo-body.palabra,.demo-body.viaje{grid-template-columns:1fr}
+  .grid.c3,.grid.c2,.split,.split.eq,.cab-demo,.portada-grid,.demo-body.palabra,.demo-body.viaje,.ruta-cuerpo{grid-template-columns:1fr}
+  .galeria{flex-wrap:wrap}
+  .foto{flex-basis:40%}
   .flow{grid-template-columns:repeat(2,minmax(0,1fr))}
   .step:not(:last-child)::after{display:none}
   .ctrls.fila{grid-template-columns:repeat(2,minmax(0,1fr))}
