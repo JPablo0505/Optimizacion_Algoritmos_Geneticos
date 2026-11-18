@@ -54,7 +54,7 @@
   var generacion = 0;
   var mutacion = 1 / 8;           // automática: 1 / largo (12,5 % con GENETICA)
   var mutAuto = true;             // el interruptor "Mutación automática"
-  var verOrigen = false;          // el interruptor "Ver de dónde viene cada letra"
+  var verOrigen = false;          // el interruptor "Ver de qué padre se copió cada letra"
 
   // máquina de estados
   var arrancado = false;          // el usuario presionó Empezar
@@ -297,7 +297,9 @@
     elProm.textContent = prom.toFixed(1).replace(".", ",");
 
     var html = "";
-    for (var n = 0; n < Math.min(FILAS, orden.length); n++) {
+    // con la leyenda de colores visible se muestran 2 palabras menos (cabe a 1366×768)
+    var filas = verOrigen ? FILAS - 2 : FILAS;
+    for (var n = 0; n < Math.min(filas, orden.length); n++) {
       var ind = poblacion[orden[n]], f = puntos[orden[n]];
       html += '<div class="srow' + (verOrigen ? " con-origen" : "") + '">' +
         '<div class="str">' + fichas(ind, verOrigen) + "</div>" +
@@ -371,17 +373,17 @@
   function fraseLetra(letra, h) {
     var l = letra === " " ? "El espacio" : letra;
     if (h.tipo === "mutación") {
-      return l + ": apareció por mutación en la generación " + h.gen + " y se heredó desde ahí.";
+      return l + ": nació por mutación en la generación " + h.gen + " y se copió de padres a hijos.";
     }
     return h.gen === 0
-      ? l + ": ya estaba en una palabra al azar de la población inicial."
+      ? l + ": ya estaba en una palabra al azar del inicio y se copió de padres a hijos."
       : l + ": llegó en una palabra al azar agregada en la generación " + h.gen + ".";
   }
 
-  /* hasta 5 récords (4 con frases largas): siempre el primero y el último,
+  /* hasta 4 récords: siempre el primero y el último,
      el resto bien repartido, para que la slide no se sature */
   function recordsVisibles() {
-    var max = objetivo.length > 10 ? 4 : 5;
+    var max = 4;
     if (records.length <= max) return records.slice();
     var out = [];
     for (var k = 0; k < max; k++) out.push(records[Math.round(k * (records.length - 1) / (max - 1))]);
@@ -418,12 +420,13 @@
         (h.tipo === "mutación" ? "mut. " + h.gen : h.gen === 0 ? "azar" : "azar " + h.gen) +
         "</small></button>";
     }
-    html += '<div class="hist-tit">De dónde salió cada letra <small>(pulse una letra)</small></div>' +
+    html += '<div class="hist-tit">Dónde nació cada letra <small>(pulse una letra)</small></div>' +
       '<div class="hist-letras">' + letras + "</div>" +
       '<p class="hist-frase" id="obj-hist-frase">' + fraseLetra(gana.txt[0], gana.hist[0]) + "</p>" +
-      '<p class="hist-resumen"><b>' + nIni + "</b> " + (nIni === 1 ? "letra ya venía" : "letras ya venían") +
-      " de palabras al azar y <b>" + nMut + "</b> " + (nMut === 1 ? "apareció" : "aparecieron") +
-      " por mutación. La selección y el cruce las conservaron y las juntaron en una sola palabra.</p>";
+      '<p class="hist-resumen"><b>' + nIni + "</b> " + (nIni === 1 ? "letra venía" : "letras venían") +
+      " de palabras al azar y <b>" + nMut + "</b> " + (nMut === 1 ? "nació" : "nacieron") +
+      " por mutación. Luego se copiaron de padres a hijos: por eso, en la población, " +
+      "llevan el color del padre del que se copiaron.</p>";
     elHistoria.innerHTML = html;
   }
 
